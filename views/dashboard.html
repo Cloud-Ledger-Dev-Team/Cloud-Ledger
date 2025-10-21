@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Ledger - 功能主界面</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#7B61FF',
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 导航项激活状态 */
+        .nav-item-active {
+            background-color: rgba(16, 185, 129, 0.1); /* primary/10 */
+            color: #10b981; /* primary */
+            font-weight: 500; /* font-medium */
+            border-right: 4px solid #10b981; /* border-r-4 border-primary */
+        }
+
+        /* 导航项悬停效果 */
+        .nav-item-hover {
+            transition: color 200ms, background-color 200ms;
+        }
+
+        .nav-item-hover:hover {
+            background-color: #f3f4f6; /* gray-100 */
+        }
+
+        /* 卡片阴影效果 */
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+            transition: box-shadow 300ms;
+        }
+
+        .card-shadow:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
+        }
+
+        /* 分类项样式 */
+        .category-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem; /* p-4 */
+            border-radius: 0.5rem; /* rounded-lg */
+            border: 1px solid #e5e7eb; /* border border-gray-200 */
+            cursor: pointer;
+            transition: all 200ms;
+        }
+
+        .category-item:hover {
+            border-color: rgba(16, 185, 129, 0.5); /* border-primary/50 */
+            background-color: rgba(16, 185, 129, 0.05); /* bg-primary/5 */
+        }
+
+        /* 选中的分类项 */
+        .category-item.selected {
+            border-color: #10b981; /* border-primary */
+            background-color: rgba(16, 185, 129, 0.1); /* bg-primary/10 */
+        }
+    </style>
+</head>
+
+<body class="font-inter min-h-screen flex flex-col bg-gray-50">
+    <div class="flex flex-1 overflow-hidden">
+        <!-- 左侧导航栏 -->
+        <div class="w-64 bg-white border-r border-gray-200 flex-shrink-0 hidden md:flex flex-col">
+            <!-- 品牌Logo -->
+            <div class="h-16 flex items-center justify-center bg-gradient-purple text-white">
+                <i class="fas fa-cloud text-2xl mr-2"></i>
+                <span class="font-bold text-xl">Cloud Ledger</span>
+            </div>
+
+            <!-- 导航菜单 -->
+            <nav class="flex-1 py-6 px-3 space-y-1">
+                <a href="#" class="nav-item-active flex items-center px-4 py-3 text-sm rounded-md">
+                    <i class="fas fa-plus-circle text-lg w-6 text-center"></i>
+                    <span class="ml-3">记账录入</span>
+                </a>
+                <a href="#" class="nav-item-hover flex items-center px-4 py-3 text-sm rounded-md text-gray-700">
+                    <i class="fas fa-list-alt text-lg w-6 text-center"></i>
+                    <span class="ml-3">账单管理</span>
+                </a>
+                <a href="#" class="nav-item-hover flex items-center px-4 py-3 text-sm rounded-md text-gray-700">
+                    <i class="fas fa-chart-pie text-lg w-6 text-center"></i>
+                    <span class="ml-3">数据分析</span>
+                </a>
+                <a href="#" class="nav-item-hover flex items-center px-4 py-3 text-sm rounded-md text-gray-700">
+                    <i class="fas fa-wallet text-lg w-6 text-center"></i>
+                    <span class="ml-3">账户管理</span>
+                </a>
+            </nav>
+
+            <!-- 用户信息 -->
+            <div class="p-4 border-t border-gray-200">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                        <i class="fas fa-user text-indigo-500"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-800" id="username">用户名</p>
+                        <p class="text-xs text-gray-500" id="userEmail">user@example.com</p>
+                    </div>
+                    <button id="logoutButton" class="ml-auto text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主内容区域 -->
+        <div class="flex-1 overflow-auto p-6" id="dashboard">
+            <!-- 顶部标题和操作栏 -->
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold text-gray-800">记账录入</h1>
+                <div class="flex space-x-4">
+                    <button
+                        class="bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-calendar-alt mr-2"></i>今天
+                    </button>
+                    <button
+                        class="bg-primary text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors">
+                        <i class="fas fa-filter mr-2"></i>筛选
+                    </button>
+                </div>
+            </div>
+
+            <!-- 数据统计卡片 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-700">总收入</h3>
+                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                            <i class="fas fa-arrow-up text-green-500"></i>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold text-green-500">¥<span id="totalIncome">0.00</span></p>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-700">总支出</h3>
+                        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                            <i class="fas fa-arrow-down text-red-500"></i>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold text-red-500">¥<span id="totalExpense">0.00</span></p>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-700">结余</h3>
+                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                            <i class="fas fa-balance-scale text-blue-500"></i>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold text-blue-500">¥<span id="totalBalance">0.00</span></p>
+                </div>
+            </div>
+
+            <!-- 主要内容区 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 左侧：记账录入 -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6">账单录入</h3>
+
+                        <!-- 收支切换标签 -->
+                        <div class="flex border-b mb-6">
+                            <button id="expenseTab"
+                                class="flex-1 py-3 text-center font-medium text-indigo-600 border-b-2 border-indigo-500">
+                                <i class="fas fa-minus-circle mr-2"></i>支出
+                            </button>
+                            <button id="incomeTab" class="flex-1 py-3 text-center font-medium text-gray-500">
+                                <i class="fas fa-plus-circle mr-2"></i>收入
+                            </button>
+                        </div>
+
+                        <input type="hidden" id="billType" value="expense">
+
+                        <!-- 支出分类选择 -->
+                        <div id="expenseCategories" class="mb-6">
+                            <h4 class="text-gray-700 font-medium mb-3">选择分类</h4>
+                            <div class="grid grid-cols-4 gap-3">
+                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                    data-category="餐饮">
+                                    <i class="fas fa-utensils text-xl text-amber-500 mb-2"></i>
+                                    <span class="text-sm">餐饮</span>
+                                </div>
+                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                    data-category="购物">
+                                    <i class="fas fa-shopping-bag text-xl text-purple-500 mb-2"></i>
+                                    <span class="text-sm">购物</span>
+                                </div>
+                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                    data-category="交通">
+                                    <i class="fas fa-car text-xl text-blue-500 mb-2"></i>
+                                    <span class="text-sm">交通</span>
+                                </div>
+                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                    data-category="娱乐">
+                                    <i class="fas fa-film text-xl text-red-500 mb-2"></i>
+                                    <span class="text-sm">娱乐</span>
+                                </div>
+                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                    data-category="住房">
+                                    <i class="fas fa-home text-xl text-green-500 mb-2"></i>
+                                    <span class="text-sm">住房</span>
+                                </div>
+                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                    data-category="医疗">
+                                    <i class="fas fa-heartbeat text-xl text-pink-500 mb-2"></i>
+                                    <span class="text-sm">医疗</span>
+                                </div>
+                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                    data-category="教育">
+                                    <i class="fas fa-book text-xl text-indigo-500 mb-2"></i>
+                                    <span class="text-sm">教育</span>
+                                </div>
+                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                    data-category="其他">
+                                    <i class="fas fa-ellipsis-h text-xl text-gray-500 mb-2"></i>
+                                    <span class="text-sm">其他</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 收入分类选择 -->
+                        <div id="incomeCategories" class="mb-6 hidden">
+                            <h4 class="text-gray-700 font-medium mb-3">选择分类</h4>
+                            <div class="grid grid-cols-4 gap-3">
+                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                    data-category="工资">
+                                    <i class="fas fa-wallet text-xl text-green-500 mb-2"></i>
+                                    <span class="text-sm">工资</span>
+                                </div>
+                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                    data-category="奖金">
+                                    <i class="fas fa-gift text-xl text-red-500 mb-2"></i>
+                                    <span class="text-sm">奖金</span>
+                                </div>
+                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                    data-category="投资">
+                                    <i class="fas fa-chart-line text-xl text-blue-500 mb-2"></i>
+                                    <span class="text-sm">投资</span>
+                                </div>
+                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                    data-category="兼职">
+                                    <i class="fas fa-briefcase text-xl text-purple-500 mb-2"></i>
+                                    <span class="text-sm">兼职</span>
+                                </div>
+                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                    data-category="礼金">
+                                    <i class="fas fa-heart text-xl text-pink-500 mb-2"></i>
+                                    <span class="text-sm">礼金</span>
+                                </div>
+                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                    data-category="退款">
+                                    <i class="fas fa-sync-alt text-xl text-amber-500 mb-2"></i>
+                                    <span class="text-sm">退款</span>
+                                </div>
+                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                    data-category="利息">
+                                    <i class="fas fa-percentage text-xl text-indigo-500 mb-2"></i>
+                                    <span class="text-sm">利息</span>
+                                </div>
+                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                    data-category="其他">
+                                    <i class="fas fa-ellipsis-h text-xl text-gray-500 mb-2"></i>
+                                    <span class="text-sm">其他</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 快捷记账按钮 -->
+                    <div class="mb-6">
+                        <h4 class="text-gray-700 font-medium mb-3">快捷记账</h4>
+                        <div class="flex flex-wrap gap-3">
+                            <button
+                                class="quick-entry-btn px-4 py-2 bg-gray-100 rounded-full text-gray-700 text-sm transition-colors hover:bg-gray-200"
+                                data-category="餐饮" data-amount="20">
+                                午餐 20元
+                            </button>
+                            <button
+                                class="quick-entry-btn px-4 py-2 bg-gray-100 rounded-full text-gray-700 text-sm transition-colors hover:bg-gray-200"
+                                data-category="交通" data-amount="10">
+                                地铁 10元
+                            </button>
+                            <button
+                                class="quick-entry-btn px-4 py-2 bg-gray-100 rounded-full text-gray-700 text-sm transition-colors hover:bg-gray-200"
+                                data-category="购物" data-amount="50">
+                                日用品 50元
+                            </button>
+                            <button
+                                class="quick-entry-btn px-4 py-2 bg-gray-100 rounded-full text-gray-700 text-sm transition-colors hover:bg-gray-200"
+                                data-category="餐饮" data-amount="40">
+                                晚餐 40元
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 隐藏的分类输入框 -->
+                    <input type="hidden" id="billCategory" name="category" value="餐饮">
+
+                        <!-- 表单输入 -->
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-gray-700 text-sm font-medium mb-2" for="billAmount">
+                                        金额
+                                    </label>
+                                    <input
+                                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        id="billAmount" type="number" step="0.01" placeholder="0.00">
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm font-medium mb-2" for="billDate">
+                                        日期
+                                    </label>
+                                    <input
+                                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        id="billDate" type="date">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium mb-2" for="accountSelect">
+                                    账户
+                                </label>
+                                <select
+                                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    id="accountSelect">
+                                    <option value="">请选择账户</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium mb-2" for="billDescription">
+                                    备注
+                                </label>
+                                <input
+                                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    id="billDescription" type="text" placeholder="添加备注...">
+                            </div>
+
+                            <button id="saveBillButton"
+                                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                                <i class="fas fa-save mr-2"></i>保存账单
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 账单列表 -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-bold text-gray-800">最近账单</h3>
+                            <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+                                查看全部
+                            </button>
+                        </div>
+
+                        <div id="billList" class="space-y-3 max-h-80 overflow-y-auto">
+                            <!-- 账单列表将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧：数据统计和账户管理 -->
+                <div class="space-y-6">
+                    <!-- 账户管理 -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-gray-800">我的账户</h3>
+                            <button id="addAccountButton"
+                                class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+                                <i class="fas fa-plus-circle mr-1"></i>添加账户
+                            </button>
+                        </div>
+
+                        <div id="accountList" class="space-y-3 max-h-80 overflow-y-auto">
+                            <!-- 账户列表将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+
+                    <!-- 分类统计图表 -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">支出分类统计</h3>
+                        <div class="h-64">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 账户管理模态框 -->
+    <div id="accountModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 transform transition-all">
+            <div class="p-4 border-b">
+                <div class="flex justify-between items-center">
+                    <h3 id="accountModalTitle" class="text-lg font-bold text-gray-800">添加账户</h3>
+                    <button id="closeAccountModalButton" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <input type="hidden" id="accountId">
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-medium mb-2" for="accountName">
+                            账户名称
+                        </label>
+                        <input
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            id="accountName" type="text" placeholder="如：银行卡、支付宝、现金">
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 text-sm font-medium mb-2" for="accountType">
+                            账户类型
+                        </label>
+                        <select
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            id="accountType">
+                            <option value="现金">现金</option>
+                            <option value="银行卡">银行卡</option>
+                            <option value="支付宝">支付宝</option>
+                            <option value="微信">微信</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 text-sm font-medium mb-2" for="accountBalance">
+                            初始余额
+                        </label>
+                        <input
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            id="accountBalance" type="number" step="0.01" placeholder="0.00">
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t flex justify-end">
+                <button id="saveAccountButton"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-6 rounded-lg transition-colors">
+                    保存
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入数据库API -->
+    <script src="database.js"></script>
+    <!-- 引入主脚本 -->
+    <script src="script.js"></script>
+
+    <!-- 署名界面 -->
+    <footer class="w-full py-6 bg-gradient-purple">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 py-2">
+                <div class="font-medium text-white">
+                    Developed by the <a href="https://github.com/orgs/Cloud-Ledger-Dev-Team/repositories"
+                        class="text-white hover:text-gray-200 no-underline transition-colors"
+                        target="_blank">Cloud Ledger Dev Team</a>
+                </div>
+                <div class="text-white">
+                    © 2013-2025 云记账. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>

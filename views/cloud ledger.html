@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Ledger - 登录/注册</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#7B61FF',
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="font-inter min-h-screen flex flex-col p-4">
+    <div class="w-full max-w-6xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row">
+
+        <!-- 左侧品牌展示区 -->
+        <div class="bg-gradient-purple text-white p-12 flex flex-col justify-center items-center md:w-1/2">
+            <div class="text-center">
+                <div class="text-5xl font-bold mb-4">
+                    <i class="fas fa-cloud mr-2"></i> Cloud Ledger
+                </div>
+                <div class="text-xl font-light opacity-90 mb-8">
+                    开启你的智能记账新生活
+                </div>
+                <div class="w-full max-w-xs mx-auto">
+                    <img src="https://picsum.photos/id/160/600/400" alt="财务规划"
+                        class="rounded-lg shadow-lg w-full h-auto">
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧登录/注册功能区 -->
+        <div class="p-12 md:w-1/2 flex flex-col justify-center">
+            <div class="max-w-md mx-auto w-full">
+                <!-- 切换标签 -->
+                <div class="flex rounded-lg bg-gray-100 p-1 mb-8">
+                    <button id="loginTab" class="flex-1 py-2 px-4 text-center font-medium rounded-md bg-white text-primary shadow-sm">
+                        登录
+                    </button>
+                    <button id="registerTab" class="flex-1 py-2 px-4 text-center font-medium rounded-md text-gray-700">
+                        注册
+                    </button>
+                </div>
+
+                <!-- 登录表单 -->
+                <div id="loginForm" class="bg-white rounded-lg p-6 shadow-md">
+                    <div class="text-3xl font-bold text-gray-800 mb-6">欢迎回来</div>
+
+                    <form class="space-y-6">
+                        <!-- 邮箱输入组 -->
+                        <div>
+                            <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-2">邮箱地址</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-envelope text-gray-400"></i>
+                                </div>
+                                <input type="email" id="loginEmail" name="email" placeholder="your@email.com"
+                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                            </div>
+                            <p id="loginEmailError" class="error-message mt-1 text-red-500 text-xs hidden">请输入有效的邮箱地址</p>
+                        </div>
+
+                        <!-- 密码输入组 -->
+                        <div>
+                            <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-2">密码</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-lock text-gray-400"></i>
+                                </div>
+                                <input type="password" id="loginPassword" name="password" placeholder="请输入密码"
+                                    class="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                    <button type="button" id="toggleLoginPassword" class="text-gray-400 hover:text-gray-600">
+                                        <i class="fas fa-eye-slash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <p id="loginPasswordError" class="error-message mt-1 text-red-500 text-xs hidden">密码不能为空</p>
+                            <div class="mt-2 text-right">
+                                <a href="#" class="text-sm text-primary hover:text-primary/80">忘记密码？</a>
+                            </div>
+                        </div>
+
+                        <!-- 记住我选项 -->
+                        <div class="flex items-center">
+                            <input id="rememberMe" name="rememberMe" type="checkbox"
+                                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                            <label for="rememberMe" class="ml-2 block text-sm text-gray-700">
+                                记住我
+                            </label>
+                        </div>
+
+                        <!-- 登录按钮 -->
+                        <button type="submit" id="loginButton"
+                            class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-4 rounded-md transition-all flex justify-center items-center">
+                            <span>登录</span>
+                            <i class="fas fa-sign-in-alt ml-2"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- 注册表单 -->
+                <div id="registerForm" class="bg-white rounded-lg p-6 shadow-md hidden">
+                    <div class="text-3xl font-bold text-gray-800 mb-6">创建账号</div>
+
+                    <form class="space-y-6">
+                        <!-- 用户名输入组 -->
+                        <div>
+                            <label for="registerName" class="block text-sm font-medium text-gray-700 mb-2">用户名</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-user text-gray-400"></i>
+                                </div>
+                                <input type="text" id="registerName" name="name" placeholder="请输入你的用户名"
+                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                            </div>
+                            <p id="registerNameError" class="error-message mt-1 text-red-500 text-xs hidden">用户名不能为空</p>
+                        </div>
+
+                        <!-- 邮箱输入组 -->
+                        <div>
+                            <label for="registerEmail" class="block text-sm font-medium text-gray-700 mb-2">邮箱地址</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-envelope text-gray-400"></i>
+                                </div>
+                                <input type="email" id="registerEmail" name="email" placeholder="your@email.com"
+                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                            </div>
+                            <p id="registerEmailError" class="error-message mt-1 text-red-500 text-xs hidden">请输入有效的邮箱地址</p>
+                        </div>
+
+                        <!-- 密码输入组 -->
+                        <div>
+                            <label for="registerPassword" class="block text-sm font-medium text-gray-700 mb-2">密码</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-lock text-gray-400"></i>
+                                </div>
+                                <input type="password" id="registerPassword" name="password" placeholder="请输入密码"
+                                    class="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                    <button type="button" id="toggleRegisterPassword" class="text-gray-400 hover:text-gray-600">
+                                        <i class="fas fa-eye-slash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <p id="registerPasswordError" class="error-message mt-1 text-red-500 text-xs hidden">密码长度至少为6位</p>
+                        </div>
+
+                        <!-- 确认密码输入组 -->
+                        <div>
+                            <label for="confirmRegisterPassword" class="block text-sm font-medium text-gray-700 mb-2">确认密码</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-lock text-gray-400"></i>
+                                </div>
+                                <input type="password" id="confirmRegisterPassword" name="confirmPassword" placeholder="请再次输入密码"
+                                    class="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                    <button type="button" id="toggleConfirmRegisterPassword"
+                                        class="text-gray-400 hover:text-gray-600">
+                                        <i class="fas fa-eye-slash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <p id="confirmRegisterPasswordError" class="error-message mt-1 text-red-500 text-xs hidden">两次输入的密码不一致</p>
+                        </div>
+
+                        <!-- 注册按钮 -->
+                        <button type="submit" id="registerButton"
+                            class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-4 rounded-md transition-all flex justify-center items-center">
+                            <span>注册</span>
+                            <i class="fas fa-user-plus ml-2"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 占位元素，确保footer在底部 -->
+    <div class="flex-grow"></div>
+
+    <!-- 引入外部JavaScript文件 -->
+    <script src="database.js"></script>
+    <script src="script.js"></script>
+
+    <!-- 署名界面 -->
+    <footer class="w-full py-6 bg-gradient-purple">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 py-2">
+                <div class="font-medium text-white">
+                    Developed by the <a href="https://github.com/orgs/Cloud-Ledger-Dev-Team/repositories"
+                        class="text-white hover:text-gray-200 no-underline transition-colors"
+                        target="_blank">Cloud Ledger Dev Team</a>
+                </div>
+                <div class="text-white">
+                    © 2013-2025 云记账. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>
