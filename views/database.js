@@ -324,4 +324,5 @@ window.db = {
     addAccount,
     updateAccount,
     deleteAccount
+
 };
