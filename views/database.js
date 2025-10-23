@@ -52,11 +52,21 @@ async function apiRequest(endpoint, method = 'GET', data = null) {
                     resolve({
                         message: '注册成功'
                     });
+                } else if (endpoint === '/users/forgot-password' && method === 'POST') {
+                    // 模拟忘记密码请求
+                    const user = mockUsers.find(u => u.email === data.email);
+                    if (user) {
+                        resolve({
+                            message: '重置密码链接已发送到您的邮箱'
+                        });
+                    } else {
+                        reject(new Error('该邮箱未注册'));
+                    }
                 } else if (endpoint === '/accounts' && method === 'GET') {
                     // 模拟获取账户列表
                     const userId = localStorage.getItem('user_id');
                     const userAccounts = mockAccounts.filter(a => a.user_id === userId);
-                    resolve(userAccounts);
+                    resolve({ accounts: userAccounts });
                 } else if (endpoint === '/bills' && method === 'GET') {
                     // 模拟获取账单列表
                     const userId = localStorage.getItem('user_id');
@@ -96,6 +106,7 @@ async function login(email, password) {
         localStorage.setItem('token', result.token);
         localStorage.setItem('user_id', result.user_id);
         localStorage.setItem('username', result.username);
+        localStorage.setItem('user_email', email); // 保存用户邮箱
         return result;
     } catch (error) {
         throw error;
@@ -129,11 +140,23 @@ function getCurrentUser() {
 }
 
 // 用户登出
+// 登出功能
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user_id');
     localStorage.removeItem('username');
+    localStorage.removeItem('user_email');
     localStorage.removeItem('currentUser'); // 为了向后兼容保留
+}
+
+// 忘记密码请求
+async function forgotPassword(email) {
+    try {
+        const result = await apiRequest('/users/forgot-password', 'POST', { email });
+        return result;
+    } catch (error) {
+        throw error;
+    }
 }
 
 // 更新用户信息
@@ -324,5 +347,4 @@ window.db = {
     addAccount,
     updateAccount,
     deleteAccount
-
 };
