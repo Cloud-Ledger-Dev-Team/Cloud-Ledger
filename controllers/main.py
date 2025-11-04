@@ -120,22 +120,15 @@ def dashboard():
 def page_not_found(e):
     return render_template('cloud_ledger.html'), 404
 
-if __name__ == '__main__':
-    # 运行应用
-    app.run(debug=True, host='0.0.0.0', port=5000)
-
 @app.route('/api/analytics/trend/<user_id>', methods=['GET'])
 def get_trend_analytics(user_id):
     return report_controller.get_trend_analytics(user_id)
 
-# 页面路由
-@app.route('/')
-def home():
-    return render_template('cloud_ledger.html')
+# 页面路由 (home已在前面定义)
 
-@app.route('/dashboard')
-def dashboard():
-    return render_template('dashboard.html')
+if __name__ == '__main__':
+    # 运行应用
+    app.run(debug=True, host='0.0.0.0', port=5000)
 
 if __name__ == '__main__':
     app.run(debug=True)
