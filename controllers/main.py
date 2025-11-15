@@ -14,13 +14,13 @@ from controllers.budget_controller import BudgetController
 from controllers.category_controller import CategoryController
 from controllers.report_controller import ReportController
 # 导入数据库模型
-from controllers.models_controller import db
+from models.database_models import db
 
 # 初始化Flask应用
 app = Flask(__name__, template_folder='../views', static_folder='../views')
 
 # 配置数据库
-db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'cloud_ledger.db')
+db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'models', 'cloud_ledger.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'your-secret-key-here'

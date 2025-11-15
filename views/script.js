@@ -989,28 +989,30 @@ function showAuthModal() {
 function closeAuthModal() {
     const modal = document.getElementById('authModal');
     const modalContent = document.getElementById('authModalContentContainer');
-    if (modal && modalContent) {
-        // 内容由大变小
-        modalContent.classList.remove('scale-100', 'opacity-100');
-        modalContent.classList.add('scale-90', 'opacity-0');
-        // 背景淡出
+    console.log('关闭弹窗函数被调用', modal, modalContent);
+    if (modal) {
+        // 强制移除所有可能阻止关闭的类
+        modal.classList.remove('scale-100', 'opacity-100');
+        modal.classList.add('hidden');
         modal.classList.add('opacity-0');
-        // 等待动画完成后隐藏
+        
+        // 如果modalContent存在，也应用关闭动画
+        if (modalContent) {
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-90', 'opacity-0');
+        }
+        
+        // 为确保彻底隐藏，直接设置display属性
         setTimeout(() => {
-            modal.classList.add('hidden');
-        }, 200);
+            modal.style.display = 'none';
+            console.log('弹窗已强制关闭');
+        }, 50);
     }
 }
 
-// 添加登录状态检测，未登录时直接显示底部弹窗
+// 添加登录状态检测，未登录且未显示过弹窗时才显示底部弹窗
 function setupScrollTrigger() {
-    // 移除已显示标记，确保每次都能显示弹窗
-    localStorage.removeItem('hasShownBottomPopup');
-    localStorage.removeItem('token');
-    localStorage.removeItem('user_id');
-    
-    // 不管登录状态如何，都尝试显示弹窗进行测试
-    console.log('设置滚动触发器，尝试显示底部弹窗');
+    console.log('设置滚动触发器，检查是否需要显示底部弹窗');
     
     // 检查bottomPopup元素是否存在
     const popup = document.getElementById('bottomPopup');
@@ -1019,23 +1021,55 @@ function setupScrollTrigger() {
         return;
     }
     
-    console.log('找到底部弹窗元素，当前类名:', popup.className);
-    
     // 检查用户登录状态
-    const isLoggedIn = checkUserLoggedIn();
-    console.log('用户登录状态:', isLoggedIn);
+    try {
+        const isLoggedIn = checkUserLoggedIn();
+        let hasShown = false;
+        
+        // 安全地读取localStorage
+        try {
+            hasShown = localStorage.getItem('hasShownBottomPopup') === 'true';
+        } catch (e) {
+            console.warn('读取localStorage失败，假设弹窗未显示过:', e);
+            hasShown = false;
+        }
+        
+        console.log('用户登录状态:', isLoggedIn, '弹窗已显示状态:', hasShown);
+        
+        // 只有在用户未登录且弹窗未显示过时才显示弹窗
+        if (!isLoggedIn && !hasShown) {
+            console.log('满足条件，显示底部弹窗');
+            // 延迟显示弹窗，避免与页面加载冲突
+            setTimeout(() => {
+                showBottomPopup();
+                // 显示弹窗后立即设置localStorage标记，避免重复显示
+                try {
+                    localStorage.setItem('hasShownBottomPopup', 'true');
+                    console.log('已成功设置localStorage标记，防止弹窗重复显示');
+                } catch (error) {
+                    console.error('设置localStorage失败:', error);
+                }
+            }, 1000);
+        }
+    } catch (error) {
+        console.error('设置滚动触发器出错:', error);
+        // 捕获所有错误，确保不会影响页面正常运行
+    }
     
-    // 尝试直接显示弹窗
-    console.log('准备调用showBottomPopup()');
-    showBottomPopup();
+    // 移除任何可能存在的滚动事件监听器，避免触发刷新
+    window.removeEventListener('scroll', handleScroll);
     
-    // 为了确保弹窗显示，添加一个延时再次尝试
-    setTimeout(() => {
-        console.log('延时后再次尝试显示弹窗');
-        popup.classList.remove('translate-y-full', 'opacity-0');
-        popup.classList.add('translate-y-0', 'opacity-100');
-        console.log('弹窗最终类名:', popup.className);
-    }, 1000);
+    // 如果需要滚动事件，添加一个安全的监听器
+    function handleScroll() {
+        try {
+            // 只检查是否滚动到底部，不执行任何可能导致刷新的操作
+            if (isScrolledToBottom()) {
+                console.log('已滚动到底部，但不执行任何操作');
+            }
+        } catch (error) {
+            console.error('滚动事件处理出错:', error);
+        }
+    }
 }
 
 // 检查是否滚动到底部
@@ -1057,15 +1091,28 @@ function showBottomPopup() {
 function hideBottomPopup() {
     const popup = document.getElementById('bottomPopup');
     if (popup) {
+        console.log('隐藏底部弹窗');
         // 添加隐藏类并移除显示动画
         popup.classList.add('translate-y-full', 'opacity-0');
         popup.classList.remove('translate-y-0', 'opacity-100');
+        
+        // 重置表单
+        const form = document.getElementById('bottomLoginForm');
+        if (form) {
+            form.reset();
+            // 隐藏所有错误提示
+            hideError('bottomLoginEmailError');
+            hideError('bottomLoginPasswordError');
+        }
     }
 }
 
 // 设置底部弹窗表单处理
 function setupBottomPopupForm() {
     const form = document.getElementById('bottomLoginForm');
+    const popup = document.getElementById('bottomPopup');
+    const popupContent = popup ? popup.querySelector('form, h3') : null;
+    
     if (form) {
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
@@ -1112,7 +1159,33 @@ function setupBottomPopupForm() {
         closeButton.addEventListener('click', function() {
             hideBottomPopup();
             // 设置已显示标记，避免重复显示
-            localStorage.setItem('hasShownBottomPopup', 'true');
+            try {
+                localStorage.setItem('hasShownBottomPopup', 'true');
+                console.log('已成功设置localStorage标记');
+            } catch (error) {
+                console.error('设置localStorage失败:', error);
+            }
+        });
+    }
+    
+    // 阻止弹窗内容区域的事件冒泡
+    if (popupContent) {
+        popupContent.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+    
+    // 点击弹窗外部关闭（如果弹窗存在）
+    if (popup) {
+        popup.addEventListener('click', function() {
+            hideBottomPopup();
+            // 在点击弹窗外部关闭时也设置localStorage标记
+            try {
+                localStorage.setItem('hasShownBottomPopup', 'true');
+                console.log('已成功设置localStorage标记');
+            } catch (error) {
+                console.error('设置localStorage失败:', error);
+            }
         });
     }
 }
@@ -1147,6 +1220,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // 初始化登录注册模态框事件
     const authModal = document.getElementById('authModal');
     const closeAuthModalButton = document.getElementById('closeAuthModalButton');
+    const authModalContent = authModal ? document.getElementById('authModalContentContainer') : null;
+    
     if (authModal) {
         // 点击模态框外部关闭
         authModal.addEventListener('click', function(e) {
@@ -1158,6 +1233,13 @@ document.addEventListener('DOMContentLoaded', function () {
     
     if (closeAuthModalButton) {
         closeAuthModalButton.addEventListener('click', closeAuthModal);
+    }
+    
+    // 阻止模态框内容区域的事件冒泡
+    if (authModalContent) {
+        authModalContent.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
     }
 
     // 根据页面类型初始化不同功能
