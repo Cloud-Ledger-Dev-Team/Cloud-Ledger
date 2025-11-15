@@ -104,7 +104,7 @@ def get_categories():
 # 数据分析相关路由
 @app.route('/api/analytics/monthly/<user_id>/<month>', methods=['GET'])
 def get_monthly_analytics(user_id, month):
-    return report_controller.get_monthly_analytics(user_id, month)
+    return report_controller.get_monthly_stats(user_id, month)
 
 # 视图路由
 @app.route('/')
@@ -122,13 +122,10 @@ def page_not_found(e):
 
 @app.route('/api/analytics/trend/<user_id>', methods=['GET'])
 def get_trend_analytics(user_id):
-    return report_controller.get_trend_analytics(user_id)
+    return report_controller.get_expense_trend(user_id)
 
 # 页面路由 (home已在前面定义)
 
 if __name__ == '__main__':
     # 运行应用
     app.run(debug=True, host='0.0.0.0', port=5000)
-
-if __name__ == '__main__':
-    app.run(debug=True)
