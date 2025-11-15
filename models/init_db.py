@@ -1,11 +1,11 @@
-# controllers/init_db_controller.py
+# models/init_db.py
 import os
 import sys
 
 # 添加项目根目录到Python路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from controllers.models_controller import db
+from models.database_models import db
 from controllers.main import app
 
 # 初始化数据库

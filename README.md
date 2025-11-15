@@ -12,9 +12,9 @@ Cloud-Ledger/
 │   ├── bill_controller.py       # 账单管理控制器
 │   ├── budget_controller.py     # 预算管理控制器
 │   ├── category_controller.py   # 分类管理控制器
-│   ├── init_db_controller.py    # 数据库初始化脚本
+│   ├── init_db.py    # 数据库初始化脚本 (已移至models目录)
 │   ├── main.py                  # 应用主入口文件
-│   ├── models_controller.py     # 数据库模型定义
+│   ├── models_controller.py     # 数据库模型定义 (已移至models目录)
 │   ├── report_controller.py     # 报表生成控制器
 │   ├── transaction_controller.py # 交易记录控制器
 │   └── user_controller.py       # 用户管理控制器
@@ -54,7 +54,7 @@ pip install -r requirements.txt
 
 ```bash
 cd controllers
-python init_db_controller.py
+python models/init_db.py
 ```
 
 ### 3. 运行应用
@@ -189,7 +189,7 @@ python main.py
 5. 开始添加账单记录和设置预算
 
 ### 数据管理
-- 定期备份 `cloud_ledger.db` 文件以防止数据丢失
+- 定期备份 `models/cloud_ledger.db` 文件以防止数据丢失
 - 通过管理界面可以方便地导入和导出账单数据
 
 ## 开发指南
@@ -210,9 +210,9 @@ pip install -r requirements.txt
 ```
 
 ### 数据库操作
-- 数据库文件位于项目根目录下的 `cloud_ledger.db`
+- 数据库文件位于项目的 `models` 目录下的 `cloud_ledger.db`
 - 使用 SQLAlchemy ORM 进行数据库操作
-- 数据库模型定义在 `controllers/models_controller.py` 中
+- 数据库模型定义在 `models/database_models.py` 中
 
 ### 前端开发
 - 前端文件位于 `views` 目录
