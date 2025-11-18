@@ -14,9 +14,11 @@ function logoutAndTest() {
     }, 2000);
 }
 
-// 在页面加载完成后执行
-if (document.readyState === 'complete') {
-    logoutAndTest();
-} else {
-    window.addEventListener('load', logoutAndTest);
-}
+// 在页面加载完成后执行 - 已注释掉自动执行代码，避免页面自动刷新
+// if (document.readyState === 'complete') {
+//     logoutAndTest();
+// } else {
+//     window.addEventListener('load', logoutAndTest);
+// }
+
+// 如需测试退出登录功能，请手动调用logoutAndTest()函数
