@@ -1,6 +1,7 @@
 // 数据库名称和版本
-// 后端API基础URL
-const API_BASE_URL = 'http://localhost:5000/api';
+// 后端API基础URL - 使用完整的API路径
+const API_BASE_URL = 'http://localhost:5000';
+// 确保跨域请求能够正常工作
 
 // 模拟数据 - 由于是前端演示，我们不实际发送API请求
 // 模拟用户数据库
@@ -21,79 +22,49 @@ const mockAccounts = [
     { account_id: '2', user_id: '1', name: '银行卡', type: '银行卡', balance: 5000.00 }
 ];
 
-// 通用API请求函数 - 模拟版本
+// 通用API请求函数 - 实际连接后端API
 async function apiRequest(endpoint, method = 'GET', data = null) {
-    // 返回一个Promise，模拟网络延迟
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            try {
-                // 根据不同的端点模拟不同的响应
-                if (endpoint === '/users/login' && method === 'POST') {
-                    // 模拟登录成功
-                    const user = mockUsers.find(u => u.email === data.email && u.password === data.password);
-                    if (user) {
-                        resolve({
-                            token: `mock-token-${user.id}`,
-                            user_id: user.id,
-                            username: user.name
-                        });
-                    } else {
-                        reject(new Error('邮箱或密码错误'));
-                    }
-                } else if (endpoint === '/users/register' && method === 'POST') {
-                    // 模拟注册成功
-                    const newUserId = (mockUsers.length + 1).toString();
-                    mockUsers.push({
-                        id: newUserId,
-                        name: data.name,
-                        email: data.email,
-                        password: data.password
-                    });
-                    resolve({
-                        message: '注册成功'
-                    });
-                } else if (endpoint === '/users/forgot-password' && method === 'POST') {
-                    // 模拟忘记密码请求
-                    const user = mockUsers.find(u => u.email === data.email);
-                    if (user) {
-                        resolve({
-                            message: '重置密码链接已发送到您的邮箱'
-                        });
-                    } else {
-                        reject(new Error('该邮箱未注册'));
-                    }
-                } else if (endpoint === '/accounts' && method === 'GET') {
-                    // 模拟获取账户列表
-                    const userId = localStorage.getItem('user_id');
-                    const userAccounts = mockAccounts.filter(a => a.user_id === userId);
-                    resolve({ accounts: userAccounts });
-                } else if (endpoint === '/bills' && method === 'GET') {
-                    // 模拟获取账单列表
-                    const userId = localStorage.getItem('user_id');
-                    const userBills = mockBills.filter(b => b.user_id === userId);
-                    resolve(userBills);
-                } else if (endpoint.startsWith('/accounts/') && method === 'DELETE') {
-                    // 模拟删除账户
-                    resolve({ message: '账户删除成功' });
-                } else if (endpoint === '/bills' && method === 'POST') {
-                    // 模拟添加账单
-                    const newBillId = (mockBills.length + 1).toString();
-                    const newBill = {
-                        bill_id: newBillId,
-                        user_id: localStorage.getItem('user_id'),
-                        ...data
-                    };
-                    mockBills.push(newBill);
-                    resolve(newBill);
-                } else {
-                    // 对于其他端点，返回一个默认成功响应
-                    resolve({ message: '请求成功' });
-                }
-            } catch (error) {
-                reject(error);
-            }
-        }, 500); // 模拟500ms的网络延迟
-    });
+    const url = `${API_BASE_URL}${endpoint}`;
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    
+    // 如果有token，添加到请求头
+    const token = localStorage.getItem('token');
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    const config = {
+        method: method,
+        headers: headers,
+        credentials: 'include' // 包含cookies
+    };
+    
+    if (data && (method === 'POST' || method === 'PUT')) {
+        config.body = JSON.stringify(data);
+    }
+    
+    try {
+        const response = await fetch(url, config);
+        
+        // 检查响应状态
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `请求失败: ${response.status}`);
+        }
+        
+        // 检查响应是否为空
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return await response.json();
+        }
+        
+        return { message: '请求成功' };
+    } catch (error) {
+        console.error('API请求错误:', error);
+        throw error;
+    }
 }
 
 // ====================== 用户模块 ======================
@@ -101,13 +72,21 @@ async function apiRequest(endpoint, method = 'GET', data = null) {
 // 用户登录
 async function login(email, password) {
     try {
-        const result = await apiRequest('/users/login', 'POST', { email, password });
-        // 存储JWT令牌和用户信息
-        localStorage.setItem('token', result.token);
-        localStorage.setItem('user_id', result.user_id);
-        localStorage.setItem('username', result.username);
-        localStorage.setItem('user_email', email); // 保存用户邮箱
-        return result;
+        // 与后端路由匹配：/login
+        const result = await apiRequest('/login', 'POST', { email, password });
+        
+        // 根据后端返回的数据结构进行处理
+        if (result.success) {
+            // 存储用户信息
+            localStorage.setItem('user_id', result.user.user_id);
+            localStorage.setItem('username', result.user.name);
+            localStorage.setItem('user_email', result.user.email);
+            // 虽然后端目前没有返回token，但保留存储token的位置以便后续扩展
+            localStorage.setItem('token', 'session-token');
+            return result;
+        } else {
+            throw new Error(result.error || '登录失败');
+        }
     } catch (error) {
         throw error;
     }
@@ -116,8 +95,20 @@ async function login(email, password) {
 // 用户注册
 async function register(userData) {
     try {
-        const result = await apiRequest('/users/register', 'POST', userData);
-        return result;
+        // 与后端路由匹配：/register
+        const result = await apiRequest('/register', 'POST', userData);
+        
+        // 根据后端返回的数据结构进行处理
+        if (result.success) {
+            // 注册成功后可以直接存储用户信息，便于自动登录
+            localStorage.setItem('user_id', result.user.user_id);
+            localStorage.setItem('username', result.user.name);
+            localStorage.setItem('user_email', result.user.email);
+            localStorage.setItem('token', 'session-token');
+            return result;
+        } else {
+            throw new Error(result.error || '注册失败');
+        }
     } catch (error) {
         throw error;
     }

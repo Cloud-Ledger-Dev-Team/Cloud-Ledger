@@ -214,7 +214,7 @@ function setupRegistrationForm() {
                         password: password
                     });
 
-                    showToastModal('注册成功', '注册成功！请登录', "window.location.href = 'cloud ledger.html';");
+                    showToastModal('注册成功', '注册成功！请登录', "window.location.href = 'cloud_ledger.html';");
                 } catch (error) {
                     showToastModal('注册失败', '注册失败：' + error.message);
                     console.error('注册错误:', error);
@@ -258,7 +258,7 @@ function setupLoginForm() {
             if (isValid) {
                 try {
                     await window.db.login(email, password);
-                    window.location.href = 'dashboard.html';
+                    window.location.href = 'cloud_ledger.html';
                 } catch (error) {
                     showError('loginPasswordError', error.message || '登录失败，请检查邮箱和密码');
                     console.error('登录错误:', error);
@@ -334,7 +334,7 @@ function setupLogout() {
     if (logoutButton) {
         logoutButton.addEventListener('click', function () {
             window.db.logout();
-            window.location.href = 'cloud ledger.html';
+            window.location.href = 'cloud_ledger.html';
         });
     }
 }
