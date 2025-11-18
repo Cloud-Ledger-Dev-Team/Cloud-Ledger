@@ -14,10 +14,6 @@ app.config['SECRET_KEY'] = 'your-secret-key-here'
 CORS(app)
 
 # 从models导入数据库实例
-import sys
-import os
-# 添加项目根目录到Python路径
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.database_models import db
 
 # 初始化数据库
@@ -37,14 +33,13 @@ def init_db():
         print('数据库已初始化')
 
 # 导入并注册蓝图
-from user_controller import user_bp
-from account_controller import account_bp
-from bill_controller import bill_bp
-from budget_controller import budget_bp
-from category_controller import category_bp
-from report_controller import report_bp
-from transaction_controller import transaction_bp
-from ui_controller import ui_bp
+from controllers.user_controller import user_bp
+from controllers.account_controller import account_bp
+from controllers.bill_controller import bill_bp
+from controllers.budget_controller import budget_bp
+from controllers.category_controller import category_bp
+from controllers.report_controller import report_bp
+from controllers.transaction_controller import transaction_bp
 
 # 注册蓝图
 app.register_blueprint(user_bp, url_prefix='/api')
@@ -54,7 +49,6 @@ app.register_blueprint(budget_bp, url_prefix='/api/budgets')
 app.register_blueprint(category_bp, url_prefix='/api/categories')
 app.register_blueprint(report_bp, url_prefix='/api/analytics')
 app.register_blueprint(transaction_bp, url_prefix='/api/transactions')
-app.register_blueprint(ui_bp)
 
 # 主页路由
 @app.route('/')

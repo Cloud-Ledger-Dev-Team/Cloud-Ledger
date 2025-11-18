@@ -1,13 +1,22 @@
 # controllers/main.py
-from flask import Flask, render_template
-from flask_cors import CORS
+from flask import Flask, request, jsonify, render_template
 import os
 import sys
 
 # 添加项目根目录到Python路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# 创建Flask应用实例
+# 导入控制器
+from controllers.user_controller import UserController
+from controllers.account_controller import AccountController
+from controllers.bill_controller import BillController
+from controllers.budget_controller import BudgetController
+from controllers.category_controller import CategoryController
+from controllers.report_controller import ReportController
+# 导入数据库模型
+from models.database_models import db
+
+# 初始化Flask应用
 app = Flask(__name__, template_folder='../views', static_folder='../views')
 
 # 配置数据库
@@ -16,32 +25,86 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'your-secret-key-here'
 
-# 启用CORS
-CORS(app)
-
-# 从models导入数据库实例
-from models.database_models import db
-
 # 初始化数据库
 db.init_app(app)
 
-# 导入并注册蓝图
-from controllers.user_controller import user_bp
-from controllers.account_controller import account_bp
-from controllers.bill_controller import bill_bp
-from controllers.budget_controller import budget_bp
-from controllers.category_controller import category_bp
-from controllers.report_controller import report_bp
-from controllers.transaction_controller import transaction_bp
+# 初始化控制器实例
+user_controller = UserController()
+account_controller = AccountController()
+bill_controller = BillController()
+budget_controller = BudgetController()
+category_controller = CategoryController()
+report_controller = ReportController()
 
-# 注册蓝图
-app.register_blueprint(user_bp, url_prefix='/api')
-app.register_blueprint(account_bp, url_prefix='/api/accounts')
-app.register_blueprint(bill_bp, url_prefix='/api/bills')
-app.register_blueprint(budget_bp, url_prefix='/api/budgets')
-app.register_blueprint(category_bp, url_prefix='/api/categories')
-app.register_blueprint(report_bp, url_prefix='/api/analytics')
-app.register_blueprint(transaction_bp, url_prefix='/api/transactions')
+# API路由配置
+
+# 用户相关路由
+@app.route('/api/register', methods=['POST'])
+def register():
+    return user_controller.register()
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    return user_controller.login()
+
+# 账户相关路由
+@app.route('/api/accounts', methods=['GET'])
+def get_accounts():
+    user_id = request.args.get('user_id')
+    return account_controller.get_all_accounts(user_id)
+
+@app.route('/api/accounts', methods=['POST'])
+def add_account():
+    return account_controller.add_account()
+
+@app.route('/api/accounts/<account_id>', methods=['PUT'])
+def update_account(account_id):
+    return account_controller.update_account(account_id)
+
+@app.route('/api/accounts/<account_id>', methods=['DELETE'])
+def delete_account(account_id):
+    return account_controller.delete_account(account_id)
+
+# 账单相关路由
+@app.route('/api/bills', methods=['GET'])
+def get_bills():
+    user_id = request.args.get('user_id')
+    return bill_controller.get_bills(user_id)
+
+@app.route('/api/bills', methods=['POST'])
+def add_bill():
+    return bill_controller.add_bill()
+
+@app.route('/api/bills/<bill_id>', methods=['PUT'])
+def update_bill(bill_id):
+    return bill_controller.update_bill(bill_id)
+
+@app.route('/api/bills/<bill_id>', methods=['DELETE'])
+def delete_bill(bill_id):
+    return bill_controller.delete_bill(bill_id)
+
+# 预算相关路由
+@app.route('/api/budgets', methods=['POST'])
+def set_budget():
+    return budget_controller.set_budget()
+
+@app.route('/api/budgets/<user_id>/<month>', methods=['GET'])
+def get_budget(user_id, month):
+    return budget_controller.get_budget(user_id, month)
+
+@app.route('/api/budgets/<budget_id>', methods=['PUT'])
+def update_budget(budget_id):
+    return budget_controller.update_budget(budget_id)
+
+# 分类相关路由
+@app.route('/api/categories', methods=['GET'])
+def get_categories():
+    return category_controller.get_categories()
+
+# 数据分析相关路由
+@app.route('/api/analytics/monthly/<user_id>/<month>', methods=['GET'])
+def get_monthly_analytics(user_id, month):
+    return report_controller.get_monthly_stats(user_id, month)
 
 # 视图路由
 @app.route('/')
@@ -56,6 +119,12 @@ def dashboard():
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('cloud_ledger.html'), 404
+
+@app.route('/api/analytics/trend/<user_id>', methods=['GET'])
+def get_trend_analytics(user_id):
+    return report_controller.get_expense_trend(user_id)
+
+# 页面路由 (home已在前面定义)
 
 if __name__ == '__main__':
     # 运行应用
