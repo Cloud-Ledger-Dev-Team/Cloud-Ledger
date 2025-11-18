@@ -7,33 +7,46 @@
 
 ```
 Cloud-Ledger/
-├── controllers/          # 控制器层，处理业务逻辑
-│   ├── account_controller.py    # 账户管理控制器
-│   ├── bill_controller.py       # 账单管理控制器
-│   ├── budget_controller.py     # 预算管理控制器
-│   ├── category_controller.py   # 分类管理控制器
-│   ├── init_db.py    # 数据库初始化脚本 (已移至models目录)
-│   ├── main.py                  # 应用主入口文件
-│   ├── models_controller.py     # 数据库模型定义 (已移至models目录)
-│   ├── report_controller.py     # 报表生成控制器
-│   ├── transaction_controller.py # 交易记录控制器
-│   └── user_controller.py       # 用户管理控制器
-├── models/               # 数据相关文件
-│   ├── financial_functions.sql  # 财务功能SQL脚本
-│   └── sql.sql                  # 数据库初始化SQL脚本
-├── views/                # 视图层，前端文件
-│   ├── cloud_ledger.html        # 主页面
-│   ├── cloud_ledger_bgi.png     # 背景图片
-│   ├── dashboard.html           # 仪表盘页面
-│   ├── database.js              # 数据库交互脚本
-│   ├── script.js                # 前端主脚本
-│   ├── styles.css               # 样式文件
-│   ├── test_logout.js           # 登出测试脚本
-│   └── test_popup.js            # 弹窗测试脚本
-├── requirements.txt      # 项目依赖文件
-├── README.md             # 项目说明文档
-├── 功能模块.png          # 功能模块图
-└── 架构图.jpg            # 系统架构图
+├── .gitignore                     # Git忽略文件
+├── POSTMAN测试指南.md             # API测试指南
+├── README.md                      # 项目说明文档
+├── controllers/                   # 控制器层，处理业务逻辑
+│   ├── account_controller.py      # 账户管理控制器
+│   ├── app.py                     # Flask应用实例
+│   ├── bill_controller.py         # 账单管理控制器
+│   ├── budget_controller.py       # 预算管理控制器
+│   ├── category_controller.py     # 分类管理控制器
+│   ├── main.py                    # 控制器入口
+│   ├── report_controller.py       # 报表生成控制器
+│   ├── transaction_controller.py  # 交易记录控制器
+│   └── user_controller.py         # 用户管理控制器
+├── docs/                          # 文档目录
+│   ├── E-R图.png                  # 实体关系图
+│   ├── 功能模块.png               # 功能模块图
+│   ├── 功能模块.pptx              # 功能模块演示文稿
+│   └── 架构图.jpg                 # 系统架构图
+├── main.py                        # 应用主入口文件
+├── models/                        # 数据相关文件
+│   ├── cloud_ledger.db            # SQLite数据库文件
+│   ├── database_models.py         # 数据库模型定义
+│   ├── financial_functions.sql    # 财务功能SQL脚本
+│   ├── init_db.py                 # 数据库初始化脚本
+│   └── sql.sql                    # 数据库初始化SQL脚本
+├── requirements.txt               # 项目依赖文件
+├── sqlite提示词                    # SQLite提示词
+├── tests/                         # 测试脚本目录
+│   ├── test_all_crud.ps1          # 全CRUD测试脚本
+│   ├── test_crud_en.ps1           # 英文CRUD测试脚本
+│   ├── test_scripts.ps1           # 测试脚本集合
+│   └── test_select.sql            # 选择查询测试
+└── views/                         # 视图层，前端文件
+    ├── cloud_ledger.html          # 主页面
+    ├── cloud_ledger_bgi.png       # 背景图片
+    ├── database.js                # 数据库交互脚本
+    ├── script.js                  # 前端主脚本
+    ├── styles.css                 # 样式文件
+    ├── test_logout.js             # 登出测试脚本
+    └── test_popup.js              # 弹窗测试脚本
 ```
 
 ## 技术栈
