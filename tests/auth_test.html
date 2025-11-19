@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>认证功能测试</title>
+    <script src="../views/database.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input {
+            padding: 8px;
+            margin: 5px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f1f1f1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>认证功能测试页面</h1>
+    
+    <div class="test-section">
+        <h2>注册测试</h2>
+        <input type="text" id="reg-name" placeholder="用户名">
+        <input type="email" id="reg-email" placeholder="邮箱">
+        <input type="password" id="reg-password" placeholder="密码">
+        <button onclick="testRegister()">测试注册</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>登录测试</h2>
+        <input type="email" id="login-email" placeholder="邮箱">
+        <input type="password" id="login-password" placeholder="密码">
+        <button onclick="testLogin()">测试登录</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>用户信息</h2>
+        <button onclick="testGetCurrentUser()">获取当前用户</button>
+        <button onclick="testLogout()">登出</button>
+    </div>
+    
+    <div id="result">
+        <h3>测试结果：</h3>
+        <pre id="result-text">请点击按钮进行测试...</pre>
+    </div>
+    
+    <script>
+        function showResult(message) {
+            const resultText = document.getElementById('result-text');
+            resultText.textContent = message;
+            console.log(message);
+        }
+        
+        async function testRegister() {
+            try {
+                showResult('正在尝试注册...');
+                const name = document.getElementById('reg-name').value;
+                const email = document.getElementById('reg-email').value;
+                const password = document.getElementById('reg-password').value;
+                
+                if (!name || !email || !password) {
+                    showResult('请填写所有注册信息');
+                    return;
+                }
+                
+                const result = await window.db.register({
+                    name: name,
+                    email: email,
+                    password: password
+                });
+                
+                showResult('注册成功！\n' + JSON.stringify(result, null, 2));
+            } catch (error) {
+                showResult('注册失败: ' + error.message);
+            }
+        }
+        
+        async function testLogin() {
+            try {
+                showResult('正在尝试登录...');
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                
+                if (!email || !password) {
+                    showResult('请填写所有登录信息');
+                    return;
+                }
+                
+                const result = await window.db.login(email, password);
+                showResult('登录成功！\n' + JSON.stringify(result, null, 2));
+            } catch (error) {
+                showResult('登录失败: ' + error.message);
+            }
+        }
+        
+        function testGetCurrentUser() {
+            const user = window.db.getCurrentUser();
+            showResult('当前用户信息:\n' + JSON.stringify(user, null, 2));
+        }
+        
+        function testLogout() {
+            window.db.logout();
+            showResult('已登出');
+            testGetCurrentUser();
+        }
+    </script>
+</body>
+</html>

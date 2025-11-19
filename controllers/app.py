@@ -1,17 +1,28 @@
 from flask import Flask, render_template
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager
 import os
 
 # 创建Flask应用实例
 app = Flask(__name__, template_folder='../views', static_folder='../views')
+
+# 初始化JWTManager
+jwt = JWTManager(app)
 
 # 配置数据库
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../models/cloud_ledger.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'your-secret-key-here'
 
-# 启用CORS
-CORS(app)
+# 启用CORS，配置允许的源、方法和头部
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["http://localhost:5500", "http://127.0.0.1:5500", "http://localhost:8080", "http://127.0.0.1:8080"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "Accept"],
+        "supports_credentials": True
+    }
+})
 
 # 从models导入数据库实例
 from models.database_models import db
