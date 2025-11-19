@@ -2,6 +2,7 @@
 from flask import request, jsonify, Blueprint
 import hashlib
 import uuid
+from flask_jwt_extended import create_access_token
 from models.database_models import db, User, Account
 
 # 创建用户蓝图
@@ -61,13 +62,17 @@ def login():
     
     user = User.query.filter_by(email=data['email']).first()
     if user and user.password == hash_password(data['password']):
+        # 生成JWT token
+        access_token = create_access_token(identity=user.user_id)
+        
         return jsonify({
             'success': True,
             'user': {
                 'user_id': user.user_id,
                 'name': user.name,
                 'email': user.email
-            }
+            },
+            'access_token': access_token  # 返回token
         })
     else:
         return jsonify({'success': False, 'error': '邮箱或密码错误'})

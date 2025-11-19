@@ -1,68 +1,64 @@
-// 数据库名称和版本
-// 后端API基础URL - 使用完整的API路径
+// 数据库连接和API对接
+// 后端API基础URL
 const API_BASE_URL = 'http://localhost:5000';
-// 确保跨域请求能够正常工作
+console.log('Database.js - API_BASE_URL设置为:', API_BASE_URL);
 
-// 模拟数据 - 由于是前端演示，我们不实际发送API请求
-// 模拟用户数据库
-const mockUsers = [
-    { id: '1', name: '张三', email: 'zhangsan@example.com', password: 'password123' },
-    { id: '2', name: '李四', email: 'lisi@example.com', password: 'password456' }
-];
-
-// 模拟账单数据
-const mockBills = [
-    { bill_id: '1', user_id: '1', account_id: '1', amount: 100, type: '支出', category: '餐饮', date: '2023-10-01', description: '午餐' },
-    { bill_id: '2', user_id: '1', account_id: '2', amount: 500, type: '收入', category: '工资', date: '2023-10-05', description: '月工资' }
-];
-
-// 模拟账户数据
-const mockAccounts = [
-    { account_id: '1', user_id: '1', name: '现金', type: '现金', balance: 1000.00 },
-    { account_id: '2', user_id: '1', name: '银行卡', type: '银行卡', balance: 5000.00 }
-];
-
-// 通用API请求函数 - 实际连接后端API
+// API请求函数 - 生产环境版本
 async function apiRequest(endpoint, method = 'GET', data = null) {
+    // 构建完整URL
     const url = `${API_BASE_URL}${endpoint}`;
-    const headers = {
-        'Content-Type': 'application/json'
-    };
     
-    // 如果有token，添加到请求头
-    const token = localStorage.getItem('token');
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
+    console.log(`[API] 发送请求: ${method} ${url}`);
     
+    // 请求配置
     const config = {
         method: method,
-        headers: headers,
-        credentials: 'include' // 包含cookies
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        mode: 'cors',  // 允许跨域请求
+        credentials: 'include'  // 包含cookies
     };
     
-    if (data && (method === 'POST' || method === 'PUT')) {
+    // 获取token并添加到请求头
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`;
+        console.log('[API] 添加Authorization头');
+    }
+    
+    // 如果有数据且不是GET请求，添加到请求体
+    if (data && method !== 'GET') {
         config.body = JSON.stringify(data);
+        console.log('[API] 请求数据:', data);
     }
     
     try {
+        // 发送请求
         const response = await fetch(url, config);
+        console.log(`[API] 响应状态: ${response.status}`);
+        
+        // 处理响应
+        let result;
+        try {
+            result = await response.json();
+            console.log('[API] 响应数据:', result);
+        } catch (e) {
+            // 如果不是JSON，返回文本
+            const text = await response.text();
+            console.log('[API] 响应文本:', text);
+            result = text;
+        }
         
         // 检查响应状态
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || `请求失败: ${response.status}`);
+            throw new Error(result.error || `服务器错误: ${response.status} ${response.statusText}`);
         }
         
-        // 检查响应是否为空
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-            return await response.json();
-        }
-        
-        return { message: '请求成功' };
+        return result;
     } catch (error) {
-        console.error('API请求错误:', error);
+        console.error('[API] 请求失败:', error.message);
         throw error;
     }
 }
@@ -72,8 +68,11 @@ async function apiRequest(endpoint, method = 'GET', data = null) {
 // 用户登录
 async function login(email, password) {
     try {
-        // 与后端路由匹配：/login
-        const result = await apiRequest('/login', 'POST', { email, password });
+        // 与后端路由匹配：/api/login（有/api前缀）
+        const result = await apiRequest('/api/login', 'POST', { 
+            email, 
+            password 
+        });
         
         // 根据后端返回的数据结构进行处理
         if (result.success) {
@@ -81,8 +80,10 @@ async function login(email, password) {
             localStorage.setItem('user_id', result.user.user_id);
             localStorage.setItem('username', result.user.name);
             localStorage.setItem('user_email', result.user.email);
-            // 虽然后端目前没有返回token，但保留存储token的位置以便后续扩展
-            localStorage.setItem('token', 'session-token');
+            // 存储后端返回的JWT token
+            if (result.access_token) {
+                localStorage.setItem('token', result.access_token);
+            }
             return result;
         } else {
             throw new Error(result.error || '登录失败');
@@ -95,8 +96,8 @@ async function login(email, password) {
 // 用户注册
 async function register(userData) {
     try {
-        // 与后端路由匹配：/register
-        const result = await apiRequest('/register', 'POST', userData);
+        // 与后端路由匹配：/api/register（有/api前缀）
+        const result = await apiRequest('/api/register', 'POST', userData);
         
         // 根据后端返回的数据结构进行处理
         if (result.success) {
@@ -104,7 +105,7 @@ async function register(userData) {
             localStorage.setItem('user_id', result.user.user_id);
             localStorage.setItem('username', result.user.name);
             localStorage.setItem('user_email', result.user.email);
-            localStorage.setItem('token', 'session-token');
+            // 注意：后端注册接口不返回token，需要单独登录获取
             return result;
         } else {
             throw new Error(result.error || '注册失败');
@@ -143,7 +144,7 @@ function logout() {
 // 忘记密码请求
 async function forgotPassword(email) {
     try {
-        const result = await apiRequest('/users/forgot-password', 'POST', { email });
+        const result = await apiRequest('/api/users/forgot-password', 'POST', { email });
         return result;
     } catch (error) {
         throw error;
@@ -153,7 +154,7 @@ async function forgotPassword(email) {
 // 更新用户信息
 async function updateUser(userId, userData) {
     try {
-        const result = await apiRequest(`/users/${userId}`, 'PUT', userData);
+        const result = await apiRequest(`/api/users/${userId}`, 'PUT', userData);
         return result;
     } catch (error) {
         throw error;
@@ -165,7 +166,7 @@ async function updateUser(userId, userData) {
 // 添加账单
 async function addBill(billData) {
     try {
-        const result = await apiRequest('/bills', 'POST', billData);
+        const result = await apiRequest('/api/bills', 'POST', billData);
         return result;
     } catch (error) {
         throw error;
@@ -185,7 +186,7 @@ async function getBills(filters = {}) {
         // 移除第一个&符号
         if (queryParams) queryParams = '?' + queryParams.substring(1);
         
-        const result = await apiRequest(`/bills${queryParams}`, 'GET');
+        const result = await apiRequest(`/api/bills${queryParams}`, 'GET');
         return result.bills;
     } catch (error) {
         throw error;
@@ -195,7 +196,7 @@ async function getBills(filters = {}) {
 // 获取单条账单
 async function getBillById(billId) {
     try {
-        const result = await apiRequest(`/bills/${billId}`, 'GET');
+        const result = await apiRequest(`/api/bills/${billId}`, 'GET');
         return result.bill;
     } catch (error) {
         throw error;
@@ -205,7 +206,7 @@ async function getBillById(billId) {
 // 更新账单
 async function updateBill(billId, billData) {
     try {
-        const result = await apiRequest(`/bills/${billId}`, 'PUT', billData);
+        const result = await apiRequest(`/api/bills/${billId}`, 'PUT', billData);
         return result;
     } catch (error) {
         throw error;
@@ -215,7 +216,7 @@ async function updateBill(billId, billData) {
 // 删除账单
 async function deleteBill(billId) {
     try {
-        const result = await apiRequest(`/bills/${billId}`, 'DELETE');
+        const result = await apiRequest(`/api/bills/${billId}`, 'DELETE');
         return result;
     } catch (error) {
         throw error;
@@ -227,7 +228,7 @@ async function deleteBill(billId) {
 // 设置预算
 async function setBudget(budgetData) {
     try {
-        const result = await apiRequest('/budgets', 'POST', budgetData);
+        const result = await apiRequest('/api/budgets', 'POST', budgetData);
         return result;
     } catch (error) {
         throw error;
@@ -238,7 +239,7 @@ async function setBudget(budgetData) {
 async function getBudget(yearMonth) {
     try {
         const params = yearMonth ? `?year_month=${yearMonth}` : '';
-        const result = await apiRequest(`/budgets${params}`, 'GET');
+        const result = await apiRequest(`/api/budgets${params}`, 'GET');
         return result.budget || null;
     } catch (error) {
         throw error;
@@ -250,7 +251,7 @@ async function getBudget(yearMonth) {
 // 获取月度收支统计
 async function getMonthlyStats(month) {
     try {
-        const result = await apiRequest(`/stats/monthly?year_month=${month}`, 'GET');
+        const result = await apiRequest(`/api/analytics/monthly?year_month=${month}`, 'GET');
         return result;
     } catch (error) {
         throw error;
@@ -260,7 +261,7 @@ async function getMonthlyStats(month) {
 // 获取支出趋势
 async function getExpenseTrend(months = 6) {
     try {
-        const result = await apiRequest(`/stats/trend?months=${months}`, 'GET');
+        const result = await apiRequest(`/api/analytics/trend?months=${months}`, 'GET');
         return result;
     } catch (error) {
         throw error;
@@ -272,7 +273,7 @@ async function getExpenseTrend(months = 6) {
 // 获取账户列表
 async function getAccounts() {
     try {
-        const result = await apiRequest('/accounts', 'GET');
+        const result = await apiRequest('/api/accounts', 'GET');
         return result.accounts;
     } catch (error) {
         throw error;
@@ -282,7 +283,7 @@ async function getAccounts() {
 // 添加账户
 async function addAccount(accountData) {
     try {
-        const result = await apiRequest('/accounts', 'POST', accountData);
+        const result = await apiRequest('/api/accounts', 'POST', accountData);
         return result;
     } catch (error) {
         throw error;
@@ -292,7 +293,7 @@ async function addAccount(accountData) {
 // 更新账户
 async function updateAccount(accountId, accountData) {
     try {
-        const result = await apiRequest(`/accounts/${accountId}`, 'PUT', accountData);
+        const result = await apiRequest(`/api/accounts/${accountId}`, 'PUT', accountData);
         return result;
     } catch (error) {
         throw error;
@@ -302,7 +303,7 @@ async function updateAccount(accountId, accountData) {
 // 删除账户
 async function deleteAccount(accountId) {
     try {
-        const result = await apiRequest(`/accounts/${accountId}`, 'DELETE');
+        const result = await apiRequest(`/api/accounts/${accountId}`, 'DELETE');
         return result;
     } catch (error) {
         throw error;
@@ -311,11 +312,14 @@ async function deleteAccount(accountId) {
 
 // 导出数据库API
 window.db = {
+    // API基础URL
+    API_BASE_URL: API_BASE_URL,
     // 用户模块
     login,
     register,
     getCurrentUser,
     logout,
+    forgotPassword,
     updateUser,
     
     // 账单模块
@@ -337,5 +341,10 @@ window.db = {
     getAccounts,
     addAccount,
     updateAccount,
-    deleteAccount
+    deleteAccount,
+    
+    // 提供直接访问API_BASE_URL的方法
+    getBaseUrl: function() {
+        return API_BASE_URL;
+    }
 };

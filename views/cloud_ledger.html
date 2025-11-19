@@ -458,15 +458,45 @@
                 window.autoRefreshTimer = null;
             }
 
-            // 检查用户登录状态并直接显示用户信息面板（如果已登录）
+            // 检查用户登录状态并显示用户信息面板（如果已登录）
             try {
                 const token = localStorage.getItem('token');
                 const userId = localStorage.getItem('user_id');
+                const username = localStorage.getItem('username');
+                const userEmail = localStorage.getItem('user_email');
+                
                 if (token && userId) {
                     // 用户已登录，显示用户信息面板
                     const userInfoPanel = document.getElementById('userInfoPanel');
                     if (userInfoPanel) {
                         userInfoPanel.classList.remove('hidden');
+                    }
+                    
+                    // 更新用户名和邮箱显示
+                    const usernameElement = document.getElementById('username');
+                    const userEmailElement = document.getElementById('userEmail');
+                    
+                    if (usernameElement) {
+                        usernameElement.textContent = username || '用户名';
+                    }
+                    
+                    if (userEmailElement) {
+                        userEmailElement.textContent = userEmail || 'user@example.com';
+                    }
+                    
+                    // 添加登出按钮事件监听器
+                    const logoutButton = document.getElementById('logoutButton');
+                    if (logoutButton) {
+                        logoutButton.addEventListener('click', function() {
+                            // 清除用户数据
+                            localStorage.removeItem('token');
+                            localStorage.removeItem('user_id');
+                            localStorage.removeItem('username');
+                            localStorage.removeItem('user_email');
+                            
+                            // 跳转到登录/注册页面
+                            window.location.href = 'login_register.html';
+                        });
                     }
                 }
                 // 不再显示任何弹窗
@@ -475,15 +505,10 @@
             }
         });
 
-        // 防止页面自动刷新
+        // 重置页面关闭前的处理
         window.onbeforeunload = null;
-        // 完全禁用自动刷新功能
-        const originalReload = window.location.reload;
-        window.location.reload = function (forcedReload) {
-            // 不执行任何刷新操作
-            console.log('页面自动刷新已完全禁用');
-            return false;
-        };
+        // 注意：移除了页面刷新禁用，以确保导航功能正常工作
+        // 之前的代码完全覆盖了window.location.reload，可能影响正常导航
     </script>
 </body>
 

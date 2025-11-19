@@ -76,15 +76,15 @@ function showToastModal(title, message, callback = null) {
     const modalTitle = document.getElementById('toastModalTitle');
     const modalContent = document.getElementById('toastModalContent');
     const modalContentContainer = document.getElementById('toastModalContentContainer');
-    
+
     if (modal && modalTitle && modalContent && modalContentContainer) {
         // 设置标题和内容
         modalTitle.textContent = title || '提示信息';
         modalContent.textContent = message;
-        
+
         // 存储回调函数
         modal.dataset.callback = callback ? callback.toString() : '';
-        
+
         // 显示模态框但保持透明度为0
         modal.classList.remove('hidden');
         // 使用setTimeout确保下一帧执行动画
@@ -112,8 +112,10 @@ function closeToastModal() {
             } catch (e) {
                 console.error('执行弹窗回调函数失败:', e);
             }
-            modal.dataset.callback = '';
         }
+        
+        // 清空回调
+        modal.dataset.callback = '';
         
         // 内容由大变小
         modalContentContainer.classList.remove('scale-100', 'opacity-100');
@@ -207,17 +209,30 @@ function setupRegistrationForm() {
             // 如果验证通过，执行提交逻辑
             if (isValid) {
                 try {
+                    console.log('使用window.db.register方法进行注册...');
+
                     // 使用数据库注册功能
-                    await window.db.register({
+                    const result = await window.db.register({
                         name: name,
                         email: email,
                         password: password
                     });
 
-                    showToastModal('注册成功', '注册成功！请登录', "window.location.href = 'cloud_ledger.html';");
+                    console.log('注册成功结果:', result);
+                    // 显示注册成功弹窗，用户点击确定后跳转到登录界面
+                    showToastModal('注册成功', '注册成功！请点击确定后登录', "if (document.getElementById('loginTab')) { document.getElementById('loginTab').click(); } else { document.location.href = 'login_register.html?tab=login'; }");
                 } catch (error) {
-                    showToastModal('注册失败', '注册失败：' + error.message);
                     console.error('注册错误:', error);
+
+                    // 提供更具体的错误信息
+                    let errorMsg = '注册失败';
+                    if (error.message.includes('Failed to fetch')) {
+                        errorMsg = '网络连接失败，请检查服务器是否正在运行';
+                    } else if (error.message) {
+                        errorMsg = '注册失败：' + error.message;
+                    }
+
+                    showToastModal('注册失败', errorMsg);
                 }
             }
         });
@@ -257,11 +272,72 @@ function setupLoginForm() {
             // 如果验证通过，执行登录逻辑
             if (isValid) {
                 try {
-                    await window.db.login(email, password);
-                    window.location.href = 'cloud_ledger.html';
+                    console.log('开始登录验证...');
+                    const loginResult = await window.db.login(email, password);
+                    console.log('登录验证成功，结果:', loginResult);
+
+                    // 移除重复的日志输出
+
+                    // 根据用户建议优化的登录成功处理逻辑
+                    try {
+                        // 详细记录登录结果的完整结构
+                        console.log('登录结果完整对象:', JSON.stringify(loginResult));
+
+                        // 检查本地存储的实际内容
+                        console.log('本地存储中的token:', localStorage.getItem('token'));
+                        console.log('本地存储中的user_id:', localStorage.getItem('user_id'));
+                        console.log('本地存储中的username:', localStorage.getItem('username'));
+
+                        // 使用可选链和类型转换确保安全访问
+                        const isSuccess = loginResult?.success;
+                        const hasToken = !!localStorage.getItem('token');
+                        const hasUserId = !!localStorage.getItem('user_id');
+
+                        // 详细记录判断条件
+                        console.log(`登录成功条件：success=${isSuccess}, token=${hasToken}, user_id=${hasUserId}`);
+
+                        // 简化验证逻辑
+                        if (isSuccess || hasToken || hasUserId) {
+                            console.log('登录成功条件满足，准备立即跳转到主界面...');
+
+                            // Windows环境下使用简单直接的跳转方式
+                            const targetPath = 'cloud_ledger.html';
+                            console.log('使用相对路径直接跳转:', targetPath);
+
+                            // 使用assign方法确保正确导航
+                            window.location.assign(targetPath);
+
+                            // 添加超时检测，确保跳转执行
+                            setTimeout(() => {
+                                console.error('跳转超时，可能被拦截，尝试备用跳转...');
+                                // 尝试备用跳转方式
+                                window.location.href = targetPath;
+                                document.location = targetPath;
+                            }, 1000);
+                        } else {
+                            console.error('登录失败：未满足跳转条件');
+                            console.error('登录验证后没有成功标记或用户信息，可能存在问题');
+                            showError('loginPasswordError', '登录异常，请重试');
+                        }
+                    } catch (jumpError) {
+                        console.error('跳转过程出错：', jumpError);
+                        // 即使出错也尝试强制跳转
+                        try {
+                            window.location.href = 'cloud_ledger.html';
+                        } catch (finalError) {
+                            console.error('最终跳转尝试失败：', finalError);
+                        }
+                    }
                 } catch (error) {
-                    showError('loginPasswordError', error.message || '登录失败，请检查邮箱和密码');
-                    console.error('登录错误:', error);
+                    console.error('登录过程中发生错误:', error);
+
+                    // 判断是否为用户未注册的情况
+                    if (error.message && (error.message.includes('未注册') || error.message.includes('not registered') || error.message.includes('用户不存在'))) {
+                        // 显示提示弹窗，提示用户请先注册，并在用户点击确定后跳转到注册界面
+                        showToastModal('提示', '用户未注册，请先注册', "if (document.getElementById('registerTab')) { document.getElementById('registerTab').click(); } else { document.location.href = 'login_register.html?tab=register'; }");
+                    } else {
+                        showError('loginPasswordError', error.message || '登录失败，请检查邮箱和密码');
+                    }
                 }
             }
         });
@@ -346,10 +422,10 @@ function setupForgotPassword() {
     const closeForgotPasswordModal = document.getElementById('closeForgotPasswordModal');
     const forgotPasswordForm = document.getElementById('forgotPasswordForm');
     const forgotPasswordModalContentContainer = document.getElementById('forgotPasswordModalContentContainer');
-    
+
     // 提升emailRegex到函数作用域
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
+
     // 显示忘记密码模态框的函数
     function showForgotPasswordModal() {
         if (forgotPasswordModal && forgotPasswordModalContentContainer) {
@@ -365,7 +441,7 @@ function setupForgotPassword() {
             }, 10);
         }
     }
-    
+
     // 关闭忘记密码模态框的函数
     function hideForgotPasswordModal() {
         if (forgotPasswordModal && forgotPasswordModalContentContainer) {
@@ -380,40 +456,40 @@ function setupForgotPassword() {
             }, 200);
         }
     }
-    
+
     if (forgotPasswordLink && forgotPasswordModal) {
         // 显示忘记密码模态框
         forgotPasswordLink.addEventListener('click', function (e) {
             e.preventDefault();
             showForgotPasswordModal();
         });
-        
+
         // 关闭忘记密码模态框
         if (closeForgotPasswordModal) {
             closeForgotPasswordModal.addEventListener('click', hideForgotPasswordModal);
         }
-        
+
         // 点击模态框外部关闭
         forgotPasswordModal.addEventListener('click', function (e) {
             if (e.target === forgotPasswordModal) {
                 hideForgotPasswordModal();
             }
         });
-        
+
         // 表单提交处理
         if (forgotPasswordForm) {
             forgotPasswordForm.addEventListener('submit', async function (e) {
                 e.preventDefault();
-                
+
                 const email = document.getElementById('forgotEmail')?.value.trim() || '';
                 hideError('forgotEmailError');
-                
+
                 // 验证邮箱
                 if (!email || !emailRegex.test(email)) {
                     showError('forgotEmailError', '请输入有效的邮箱地址');
                     return;
                 }
-                
+
                 try {
                     await window.db.forgotPassword(email);
                     showToastModal('重置密码', '重置密码链接已发送到您的邮箱，请查收！');
@@ -425,7 +501,7 @@ function setupForgotPassword() {
                 }
             });
         }
-        
+
         // 添加实时验证
         const forgotEmailInput = document.getElementById('forgotEmail');
         if (forgotEmailInput) {
@@ -445,10 +521,10 @@ function checkUserLoggedIn() {
     const token = localStorage.getItem('token');
     const userId = localStorage.getItem('user_id');
     const username = localStorage.getItem('username');
-    
+
     // 如果有用户信息，认为用户已登录
     const isLoggedIn = token && userId;
-    
+
     // 更新用户信息显示
     const usernameElement = document.getElementById('username');
     const userEmailElement = document.getElementById('userEmail');
@@ -462,7 +538,7 @@ function checkUserLoggedIn() {
             userEmailElement.textContent = userEmail;
         }
     }
-    
+
     return isLoggedIn;
 }
 
@@ -528,10 +604,10 @@ async function loadAccounts() {
 
         return accounts;
     } catch (error) {
-            console.error('加载账户失败:', error);
-            showToastModal('加载失败', '加载账户失败: ' + error.message);
-            return [];
-        }
+        console.error('加载账户失败:', error);
+        showToastModal('加载失败', '加载账户失败: ' + error.message);
+        return [];
+    }
 }
 
 // 打开账户编辑模态框
@@ -727,7 +803,7 @@ function setupBillEntry() {
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
             const formattedDate = `${year}-${month}-${day}`;
-            
+
             // 设置日期输入框的值
             billDateInput.value = formattedDate;
         }
@@ -935,32 +1011,32 @@ function setupLoginRegisterTabs() {
     const registerTab = document.getElementById('registerTab');
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
-    
+
     if (loginTab && registerTab && loginForm && registerForm) {
-        loginTab.addEventListener('click', function() {
+        loginTab.addEventListener('click', function () {
             // 激活登录标签，显示登录表单
             loginTab.classList.add('bg-white', 'text-primary', 'shadow-sm');
             loginTab.classList.remove('text-gray-700');
             registerTab.classList.remove('bg-white', 'text-primary', 'shadow-sm');
             registerTab.classList.add('text-gray-700');
-            
+
             loginForm.classList.remove('hidden');
             registerForm.classList.add('hidden');
-            
+
             // 重新初始化表单
             setupLoginForm();
         });
-        
-        registerTab.addEventListener('click', function() {
+
+        registerTab.addEventListener('click', function () {
             // 激活注册标签，显示注册表单
             registerTab.classList.add('bg-white', 'text-primary', 'shadow-sm');
             registerTab.classList.remove('text-gray-700');
             loginTab.classList.remove('bg-white', 'text-primary', 'shadow-sm');
             loginTab.classList.add('text-gray-700');
-            
+
             registerForm.classList.remove('hidden');
             loginForm.classList.add('hidden');
-            
+
             // 重新初始化表单
             setupRegistrationForm();
         });
@@ -995,13 +1071,13 @@ function closeAuthModal() {
         modal.classList.remove('scale-100', 'opacity-100');
         modal.classList.add('hidden');
         modal.classList.add('opacity-0');
-        
+
         // 如果modalContent存在，也应用关闭动画
         if (modalContent) {
             modalContent.classList.remove('scale-100', 'opacity-100');
             modalContent.classList.add('scale-90', 'opacity-0');
         }
-        
+
         // 为确保彻底隐藏，直接设置display属性
         setTimeout(() => {
             modal.style.display = 'none';
@@ -1013,19 +1089,19 @@ function closeAuthModal() {
 // 添加登录状态检测，未登录且未显示过弹窗时才显示底部弹窗
 function setupScrollTrigger() {
     console.log('设置滚动触发器，检查是否需要显示底部弹窗');
-    
+
     // 检查bottomPopup元素是否存在
     const popup = document.getElementById('bottomPopup');
     if (!popup) {
         console.log('当前页面不包含底部弹窗元素，跳过弹窗设置');
         return;
     }
-    
+
     // 检查用户登录状态
     try {
         const isLoggedIn = checkUserLoggedIn();
         let hasShown = false;
-        
+
         // 安全地读取localStorage
         try {
             hasShown = localStorage.getItem('hasShownBottomPopup') === 'true';
@@ -1033,9 +1109,9 @@ function setupScrollTrigger() {
             console.warn('读取localStorage失败，假设弹窗未显示过:', e);
             hasShown = false;
         }
-        
+
         console.log('用户登录状态:', isLoggedIn, '弹窗已显示状态:', hasShown);
-        
+
         // 只有在用户未登录且弹窗未显示过时才显示弹窗
         if (!isLoggedIn && !hasShown) {
             console.log('满足条件，显示底部弹窗');
@@ -1055,10 +1131,10 @@ function setupScrollTrigger() {
         console.error('设置滚动触发器出错:', error);
         // 捕获所有错误，确保不会影响页面正常运行
     }
-    
+
     // 移除任何可能存在的滚动事件监听器，避免触发刷新
     window.removeEventListener('scroll', handleScroll);
-    
+
     // 如果需要滚动事件，添加一个安全的监听器
     function handleScroll() {
         try {
@@ -1095,7 +1171,7 @@ function hideBottomPopup() {
         // 添加隐藏类并移除显示动画
         popup.classList.add('translate-y-full', 'opacity-0');
         popup.classList.remove('translate-y-0', 'opacity-100');
-        
+
         // 重置表单
         const form = document.getElementById('bottomLoginForm');
         if (form) {
@@ -1112,7 +1188,7 @@ function setupBottomPopupForm() {
     const form = document.getElementById('bottomLoginForm');
     const popup = document.getElementById('bottomPopup');
     const popupContent = popup ? popup.querySelector('form, h3') : null;
-    
+
     if (form) {
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
@@ -1156,7 +1232,7 @@ function setupBottomPopupForm() {
     // 设置关闭按钮事件
     const closeButton = document.getElementById('closeBottomPopup');
     if (closeButton) {
-        closeButton.addEventListener('click', function() {
+        closeButton.addEventListener('click', function () {
             hideBottomPopup();
             // 设置已显示标记，避免重复显示
             try {
@@ -1167,17 +1243,17 @@ function setupBottomPopupForm() {
             }
         });
     }
-    
+
     // 阻止弹窗内容区域的事件冒泡
     if (popupContent) {
-        popupContent.addEventListener('click', function(e) {
+        popupContent.addEventListener('click', function (e) {
             e.stopPropagation();
         });
     }
-    
+
     // 点击弹窗外部关闭（如果弹窗存在）
     if (popup) {
-        popup.addEventListener('click', function() {
+        popup.addEventListener('click', function () {
             hideBottomPopup();
             // 在点击弹窗外部关闭时也设置localStorage标记
             try {
@@ -1196,10 +1272,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 初始化登录/注册标签切换功能
     setupLoginRegisterTabs();
-    
+
     // 检查是否在登录/注册页面
     const isAuthPage = document.getElementById('loginForm') || document.getElementById('registerForm');
-    
+
     // 如果在登录/注册页面，不要执行checkUserLoggedIn()，因为它会模拟登录状态
     let isLoggedIn = false;
     if (!isAuthPage) {
@@ -1213,31 +1289,31 @@ document.addEventListener('DOMContentLoaded', function () {
     setupLogout();
     setupNavigation();
     setupBottomPopupForm();
-    
+
     // 添加滚轮下滑触发登录注册弹窗功能
     setupScrollTrigger();
-    
+
     // 初始化登录注册模态框事件
     const authModal = document.getElementById('authModal');
     const closeAuthModalButton = document.getElementById('closeAuthModalButton');
     const authModalContent = authModal ? document.getElementById('authModalContentContainer') : null;
-    
+
     if (authModal) {
         // 点击模态框外部关闭
-        authModal.addEventListener('click', function(e) {
+        authModal.addEventListener('click', function (e) {
             if (e.target === authModal) {
                 closeAuthModal();
             }
         });
     }
-    
+
     if (closeAuthModalButton) {
         closeAuthModalButton.addEventListener('click', closeAuthModal);
     }
-    
+
     // 阻止模态框内容区域的事件冒泡
     if (authModalContent) {
-        authModalContent.addEventListener('click', function(e) {
+        authModalContent.addEventListener('click', function (e) {
             e.stopPropagation();
         });
     }
@@ -1245,12 +1321,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // 根据页面类型初始化不同功能
     if (document.getElementById('registerForm')) {
         console.log('初始化注册表单');
-            setupRegistrationForm();
-        } else if (document.getElementById('loginForm')) {
-            console.log('初始化登录表单');
-            setupLoginForm();
-            // 初始化忘记密码功能
-            setupForgotPassword();
+        setupRegistrationForm();
+    } else if (document.getElementById('loginForm')) {
+        console.log('初始化登录表单');
+        setupLoginForm();
+        // 初始化忘记密码功能
+        setupForgotPassword();
     } else if (isLoggedIn) {
         console.log('用户已登录，初始化主界面功能');
         // 主界面功能初始化
@@ -1296,22 +1372,22 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // 初始化VS目录模态框事件
-        if (document.getElementById('closeVsDirModal')) {
-            document.getElementById('closeVsDirModal').addEventListener('click', closeVsDirModal);
-        }
-        
-        if (document.getElementById('closeVsDirModalButton')) {
-            document.getElementById('closeVsDirModalButton').addEventListener('click', closeVsDirModal);
-        }
-        
-        // 初始化通用提示模态框事件
-        if (document.getElementById('closeToastModal')) {
-            document.getElementById('closeToastModal').addEventListener('click', closeToastModal);
-        }
-        
-        if (document.getElementById('closeToastModalButton')) {
-            document.getElementById('closeToastModalButton').addEventListener('click', closeToastModal);
-        }
-        
+    if (document.getElementById('closeVsDirModal')) {
+        document.getElementById('closeVsDirModal').addEventListener('click', closeVsDirModal);
+    }
+
+    if (document.getElementById('closeVsDirModalButton')) {
+        document.getElementById('closeVsDirModalButton').addEventListener('click', closeVsDirModal);
+    }
+
+    // 初始化通用提示模态框事件
+    if (document.getElementById('closeToastModal')) {
+        document.getElementById('closeToastModal').addEventListener('click', closeToastModal);
+    }
+
+    if (document.getElementById('closeToastModalButton')) {
+        document.getElementById('closeToastModalButton').addEventListener('click', closeToastModal);
+    }
+
     console.log('初始化完成:', new Date().toISOString());
 });
