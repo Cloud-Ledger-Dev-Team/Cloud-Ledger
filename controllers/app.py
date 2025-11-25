@@ -64,7 +64,7 @@ app.register_blueprint(transaction_bp, url_prefix='/api/transactions')
 # 主页路由
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('login_register.html')
 
 # 运行入口
 if __name__ == '__main__':
