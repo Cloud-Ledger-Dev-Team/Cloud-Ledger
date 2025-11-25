@@ -67,6 +67,7 @@ pip install -r requirements.txt
 
 ```bash
 cd controllers
+pip install flask_jwt_extended 
 python models/init_db.py
 ```
 

@@ -15,24 +15,10 @@ from controllers.bill_controller import bill_bp
 from controllers.budget_controller import budget_bp
 from controllers.category_controller import category_bp
 from controllers.report_controller import report_bp
-# 导入数据库模型
-from models.database_models import db
+from controllers.transaction_controller import transaction_bp
 
-# 初始化Flask应用
-app = Flask(__name__, template_folder='../views', static_folder='../views')
-
-# 配置数据库
-db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'models', 'cloud_ledger.db')
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'your-secret-key-here'
-app.config['JWT_SECRET_KEY'] = 'your-jwt-secret-key-here'  # JWT密钥
-
-# 初始化数据库
-db.init_app(app)
-
-# 初始化JWT管理器
-jwt = JWTManager(app)
+# 从app.py导入已配置好的Flask应用实例和依赖
+from controllers.app import app, jwt, db
 
 # JWT认证装饰器
 def jwt_required(f):
@@ -52,13 +38,60 @@ def jwt_required(f):
             return jsonify({'success': False, 'error': '未授权访问'}), 401
     return decorated_function
 
-# 注册蓝图
-app.register_blueprint(user_bp, url_prefix='/api')
-app.register_blueprint(account_bp, url_prefix='/api')
-app.register_blueprint(bill_bp, url_prefix='/api')
-app.register_blueprint(budget_bp, url_prefix='/api')
-app.register_blueprint(category_bp, url_prefix='/api')
-app.register_blueprint(report_bp, url_prefix='/api')
+# 暂时注释蓝图注册，直接在main.py中定义注册路由
+# app.register_blueprint(user_bp, url_prefix='/api')
+# app.register_blueprint(account_bp, url_prefix='/api/accounts')
+# app.register_blueprint(bill_bp, url_prefix='/api/bills')
+# app.register_blueprint(budget_bp, url_prefix='/api/budgets')
+# app.register_blueprint(category_bp, url_prefix='/api/categories')
+# app.register_blueprint(report_bp, url_prefix='/api/reports')
+# app.register_blueprint(transaction_bp, url_prefix='/api/transactions')
+
+# 直接在main.py中定义注册路由
+import uuid
+from models.database_models import User, Account
+
+@app.route('/api/register', methods=['POST'])
+def register():
+    """用户注册接口"""
+    data = request.json
+    
+    # 检查邮箱是否已存在
+    existing_user = User.query.filter_by(email=data['email']).first()
+    if existing_user:
+        return jsonify({'success': False, 'error': '该邮箱已被注册'})
+    
+    # 创建新用户
+    new_user = User(
+        user_id=str(uuid.uuid4()),
+        name=data['name'],
+        email=data['email'],
+        password=hash_password(data['password'])
+    )
+    
+    db.session.add(new_user)
+    db.session.commit()
+    
+    # 创建默认账户
+    default_account = Account(
+        account_id=str(uuid.uuid4()),
+        user_id=new_user.user_id,
+        name='默认账户',
+        type='现金',
+        balance=0.0
+    )
+    
+    db.session.add(default_account)
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'user': {
+            'user_id': new_user.user_id,
+            'name': new_user.name,
+            'email': new_user.email
+        }
+    })
 
 # 数据分析相关路由 - 由于这些路由在report_controller中可能不存在，暂时保留
 @app.route('/api/analytics/monthly/<user_id>/<month>', methods=['GET'])
