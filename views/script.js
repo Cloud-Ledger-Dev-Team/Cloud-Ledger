@@ -220,7 +220,7 @@ function setupRegistrationForm() {
 
                     console.log('注册成功结果:', result);
                     // 显示注册成功弹窗，用户点击确定后跳转到登录界面
-                    showToastModal('注册成功', '注册成功！请点击确定后登录', "if (document.getElementById('loginTab')) { document.getElementById('loginTab').click(); } else { document.location.href = 'login_register.html?tab=login'; }");
+                    showToastModal('注册成功', '注册成功！请点击确定后登录', "console.log('注册成功，切换到登录标签页'); if (document.getElementById('loginTab')) { document.getElementById('loginTab').click(); } else { console.log('未找到登录标签，跳转到登录页面'); document.location.href = 'login_register.html?tab=login'; }");
                 } catch (error) {
                     console.error('注册错误:', error);
 
@@ -304,8 +304,15 @@ function setupLoginForm() {
                             const targetPath = 'cloud_ledger.html';
                             console.log('使用相对路径直接跳转:', targetPath);
 
-                            // 使用assign方法确保正确导航
-                            window.location.assign(targetPath);
+                            // 尝试多种跳转方式确保成功
+                            try {
+                                // 使用replace方法强制替换当前页面，避免历史记录问题
+                                window.location.replace(targetPath);
+                            } catch (e) {
+                                console.error('replace跳转失败:', e);
+                                // 回退到assign方法
+                                window.location.assign(targetPath);
+                            }
 
                             // 添加超时检测，确保跳转执行
                             setTimeout(() => {
@@ -1220,7 +1227,7 @@ function setupBottomPopupForm() {
             if (isValid) {
                 try {
                     await window.db.login(email, password);
-                    window.location.href = 'dashboard.html';
+                    window.location.href = 'cloud_ledger.html';
                 } catch (error) {
                     showError('bottomLoginPasswordError', error.message || '登录失败，请检查邮箱和密码');
                     console.error('登录错误:', error);
