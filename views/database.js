@@ -73,22 +73,22 @@ async function login(email, password) {
             email, 
             password 
         });
+        console.log('Login API response:', result);
         
         // 根据后端返回的数据结构进行处理
-        if (result.success) {
+        if (result.success && (result.access_token || result.token)) {
             // 存储用户信息
             localStorage.setItem('user_id', result.user.user_id);
             localStorage.setItem('username', result.user.name);
             localStorage.setItem('user_email', result.user.email);
             // 存储后端返回的JWT token
-            if (result.access_token) {
-                localStorage.setItem('token', result.access_token);
-            }
+            localStorage.setItem('token', result.access_token || result.token);
             return result;
         } else {
             throw new Error(result.error || '登录失败');
         }
     } catch (error) {
+        console.error('Login error:', error);
         throw error;
     }
 }

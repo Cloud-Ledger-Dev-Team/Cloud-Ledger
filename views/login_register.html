@@ -60,7 +60,7 @@
                 </div>
 
                 <!-- 登录表单 -->
-                <div id="loginForm" class="bg-white rounded-lg p-6 shadow-md">
+                <form id="loginForm" class="bg-white rounded-lg p-6 shadow-md">
                     <div class="text-3xl font-bold text-gray-800 mb-6">欢迎回来</div>
 
                     <form class="space-y-6">
@@ -117,10 +117,9 @@
                             <i class="fas fa-sign-in-alt ml-2"></i>
                         </button>
                     </form>
-                </div>
 
                 <!-- 注册表单 -->
-                <div id="registerForm" class="bg-white rounded-lg p-6 shadow-md hidden">
+                <form id="registerForm" class="bg-white rounded-lg p-6 shadow-md hidden">
                     <div class="text-3xl font-bold text-gray-800 mb-6">创建账号</div>
 
                     <form class="space-y-6">
@@ -201,7 +200,6 @@
                             <i class="fas fa-user-plus ml-2"></i>
                         </button>
                     </form>
-                </div>
             </div>
         </div>
     </div>
@@ -211,18 +209,19 @@
 
     <!-- JavaScript 文件 -->
     <script src="database.js"></script>
-    <script src="script.js"></script>
+    <script type="module" src="app.js"></script>
 
     <script>
-        // 页面加载完成后显示欢迎弹窗
-        window.addEventListener('DOMContentLoaded', function () {
-            // 检查是否存在showToastModal函数，如果存在则显示欢迎弹窗
-            if (typeof showToastModal === 'function') {
-                setTimeout(function () {
-                    showToastModal('欢迎使用', '欢迎使用Cloud Ledger云记账系统！');
-                }, 1000);
-            }
-        });
+        // 在app.js模块加载完成后再显示欢迎弹窗
+        // 监听app.js加载完成事件
+        document.querySelector('script[src="app.js"]').onload = function() {
+            // 延迟执行，确保模块中的函数已经注册到window对象
+            setTimeout(function () {
+                if (typeof window.showToastModal === 'function') {
+                    window.showToastModal('欢迎使用', '欢迎使用Cloud Ledger云记账系统！');
+                }
+            }, 500);
+        };
     </script>
 
     <!-- 署名界面 -->
