@@ -40,13 +40,22 @@ Cloud-Ledger/
 │   ├── test_scripts.ps1           # 测试脚本集合
 │   └── test_select.sql            # 选择查询测试
 └── views/                         # 视图层，前端文件
+    ├── account.js                 # 账户管理脚本
+    ├── app.js                     # 前端主脚本
+    ├── auth.js                    # 认证管理脚本
+    ├── bill.js                    # 账单管理脚本
     ├── cloud_ledger.html          # 主页面
     ├── cloud_ledger_bgi.png       # 背景图片
     ├── database.js                # 数据库交互脚本
-    ├── script.js                  # 前端主脚本
+    ├── login_register.html        # 登录注册页面
+    ├── main.js                    # 核心逻辑脚本
+    ├── modal.js                   # 弹窗管理脚本
+    ├── navigation.js              # 导航管理脚本
+    ├── stat.js                    # 统计功能脚本
     ├── styles.css                 # 样式文件
     ├── test_logout.js             # 登出测试脚本
-    └── test_popup.js              # 弹窗测试脚本
+    ├── test_popup.js              # 弹窗测试脚本
+    └── utils.js                   # 工具函数脚本
 ```
 
 ## 技术栈
@@ -67,6 +76,7 @@ pip install -r requirements.txt
 
 ```bash
 cd controllers
+pip install flask_jwt_extended  //若报错，输入 python -m pip install -r requirements.txt flask_jwt_extended 
 python models/init_db.py
 ```
 

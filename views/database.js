@@ -6,9 +6,9 @@ console.log('Database.js - API_BASE_URL设置为:', API_BASE_URL);
 // API请求函数 - 生产环境版本
 async function apiRequest(endpoint, method = 'GET', data = null) {
     // 构建完整URL
-    const url = `${API_BASE_URL}${endpoint}`;
+    const fullUrl = `${API_BASE_URL}${endpoint}`;
     
-    console.log(`[API] 发送请求: ${method} ${url}`);
+    console.log(`[API] 发送请求: ${method} ${fullUrl}`);
     
     // 请求配置
     const config = {
@@ -35,8 +35,8 @@ async function apiRequest(endpoint, method = 'GET', data = null) {
     }
     
     try {
-        // 发送请求
-        const response = await fetch(url, config);
+        // 发送请求 - 确保使用完整URL
+        const response = await fetch(fullUrl, config);
         console.log(`[API] 响应状态: ${response.status}`);
         
         // 处理响应
@@ -73,22 +73,22 @@ async function login(email, password) {
             email, 
             password 
         });
+        console.log('Login API response:', result);
         
         // 根据后端返回的数据结构进行处理
-        if (result.success) {
+        if (result.success && (result.access_token || result.token)) {
             // 存储用户信息
             localStorage.setItem('user_id', result.user.user_id);
             localStorage.setItem('username', result.user.name);
             localStorage.setItem('user_email', result.user.email);
             // 存储后端返回的JWT token
-            if (result.access_token) {
-                localStorage.setItem('token', result.access_token);
-            }
+            localStorage.setItem('token', result.access_token || result.token);
             return result;
         } else {
             throw new Error(result.error || '登录失败');
         }
     } catch (error) {
+        console.error('Login error:', error);
         throw error;
     }
 }
