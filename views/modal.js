@@ -1,4 +1,4 @@
-// 模态框相关功能
+// views/modal.js - 弹窗管理 (已修复语法错误)
 
 /**
  * 显示VS目录信息模态框
@@ -7,13 +7,9 @@ export function showVsDirModal() {
     const modal = document.getElementById('vsDirModal');
     const modalContent = document.getElementById('vsDirModalContentContainer');
     if (modal && modalContent) {
-        // 显示模态框但保持透明度为0
         modal.classList.remove('hidden');
-        // 使用setTimeout确保下一帧执行动画
         setTimeout(() => {
-            // 背景淡入
             modal.classList.remove('opacity-0');
-            // 内容由小变大
             modalContent.classList.remove('scale-90', 'opacity-0');
             modalContent.classList.add('scale-100', 'opacity-100');
         }, 10);
@@ -27,12 +23,9 @@ export function closeVsDirModal() {
     const modal = document.getElementById('vsDirModal');
     const modalContent = document.getElementById('vsDirModalContentContainer');
     if (modal && modalContent) {
-        // 内容由大变小
         modalContent.classList.remove('scale-100', 'opacity-100');
         modalContent.classList.add('scale-90', 'opacity-0');
-        // 背景淡出
         modal.classList.add('opacity-0');
-        // 等待动画完成后隐藏
         setTimeout(() => {
             modal.classList.add('hidden');
         }, 200);
@@ -41,9 +34,7 @@ export function closeVsDirModal() {
 
 /**
  * 显示通用提示弹窗
- * @param {string} title - 弹窗标题
- * @param {string} message - 弹窗内容
- * @param {function|null} callback - 确认后的回调函数
+ * (修复版：使用全局变量存储回调，防止闭包丢失)
  */
 export function showToastModal(title, message, callback = null) {
     const modal = document.getElementById('toastModal');
@@ -52,20 +43,15 @@ export function showToastModal(title, message, callback = null) {
     const modalContentContainer = document.getElementById('toastModalContentContainer');
 
     if (modal && modalTitle && modalContent && modalContentContainer) {
-        // 设置标题和内容
         modalTitle.textContent = title || '提示信息';
         modalContent.textContent = message;
 
-        // 存储回调函数
-        modal.dataset.callback = callback ? callback.toString() : '';
+        // 【关键】将回调函数挂载到 window 对象，确保点击确定时能执行
+        window._currentToastCallback = callback;
 
-        // 显示模态框但保持透明度为0
         modal.classList.remove('hidden');
-        // 使用setTimeout确保下一帧执行动画
         setTimeout(() => {
-            // 背景淡入
             modal.classList.remove('opacity-0');
-            // 内容由小变大
             modalContentContainer.classList.remove('scale-90', 'opacity-0');
             modalContentContainer.classList.add('scale-100', 'opacity-100');
         }, 10);
@@ -79,31 +65,25 @@ export function closeToastModal() {
     const modal = document.getElementById('toastModal');
     const modalContentContainer = document.getElementById('toastModalContentContainer');
     if (modal && modalContentContainer) {
-        // 执行回调函数
-        const callbackStr = modal.dataset.callback;
-        if (callbackStr) {
-            try {
-                const callback = new Function(callbackStr);
-                callback();
-            } catch (e) {
-                console.error('执行弹窗回调函数失败:', e);
-            }
-        }
-        
-        // 清空回调
-        modal.dataset.callback = '';
-        
-        // 内容由大变小
+        // 动画效果
         modalContentContainer.classList.remove('scale-100', 'opacity-100');
         modalContentContainer.classList.add('scale-90', 'opacity-0');
-        // 背景淡出
         modal.classList.add('opacity-0');
-        // 等待动画完成后隐藏
+
         setTimeout(() => {
             modal.classList.add('hidden');
+            // 【关键】执行暂存的回调函数
+            if (typeof window._currentToastCallback === 'function') {
+                window._currentToastCallback();
+                window._currentToastCallback = null; // 执行完清空
+            }
         }, 200);
     }
 }
+
+// 为了兼容部分旧代码，同时也挂载到 window
+window.showToastModal = showToastModal;
+window.closeToastModal = closeToastModal;
 
 /**
  * 显示登录注册模态框
@@ -112,13 +92,9 @@ export function showAuthModal() {
     const modal = document.getElementById('authModal');
     const modalContent = document.getElementById('authModalContentContainer');
     if (modal && modalContent) {
-        // 显示模态框但保持透明度为0
         modal.classList.remove('hidden');
-        // 使用setTimeout确保下一帧执行动画
         setTimeout(() => {
-            // 背景淡入
             modal.classList.remove('opacity-0');
-            // 内容由小变大
             modalContent.classList.remove('scale-90', 'opacity-0');
             modalContent.classList.add('scale-100', 'opacity-100');
         }, 10);
@@ -130,58 +106,58 @@ export function showAuthModal() {
  */
 export function closeAuthModal() {
     const modal = document.getElementById('authModal');
-    const modalContent = document.getElementById('authModalContentContainer');
-    console.log('关闭弹窗函数被调用', modal, modalContent);
     if (modal) {
-        // 强制移除所有可能阻止关闭的类
-        modal.classList.remove('scale-100', 'opacity-100');
-        modal.classList.add('hidden');
         modal.classList.add('opacity-0');
-
-        // 如果modalContent存在，也应用关闭动画
-        if (modalContent) {
-            modalContent.classList.remove('scale-100', 'opacity-100');
-            modalContent.classList.add('scale-90', 'opacity-0');
-        }
-
-        // 为确保彻底隐藏，直接设置display属性
         setTimeout(() => {
-            modal.style.display = 'none';
-            console.log('弹窗已强制关闭');
-        }, 50);
+            modal.classList.add('hidden');
+        }, 200);
     }
 }
 
 /**
- * 显示底部小弹窗
+ * 显示/隐藏 底部小弹窗
  */
 export function showBottomPopup() {
     const popup = document.getElementById('bottomPopup');
     if (popup) {
-        // 移除隐藏类并添加显示动画
         popup.classList.remove('translate-y-full', 'opacity-0');
         popup.classList.add('translate-y-0', 'opacity-100');
     }
 }
 
-/**
- * 隐藏底部小弹窗
- */
 export function hideBottomPopup() {
     const popup = document.getElementById('bottomPopup');
     if (popup) {
-        console.log('隐藏底部弹窗');
-        // 添加隐藏类并移除显示动画
         popup.classList.add('translate-y-full', 'opacity-0');
         popup.classList.remove('translate-y-0', 'opacity-100');
+    }
+}
 
-        // 重置表单
-        const form = document.getElementById('bottomLoginForm');
-        if (form) {
-            form.reset();
-            // 隐藏所有错误提示
-            hideError('bottomLoginEmailError');
-            hideError('bottomLoginPasswordError');
-        }
+/**
+ * 忘记密码弹窗函数
+ */
+export function showForgotPasswordModal() {
+    const modal = document.getElementById('forgotPasswordModal');
+    const modalContent = document.getElementById('forgotPasswordModalContentContainer');
+    if (modal && modalContent) {
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            modalContent.classList.remove('scale-90', 'opacity-0');
+            modalContent.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+}
+
+export function closeForgotPasswordModal() {
+    const modal = document.getElementById('forgotPasswordModal');
+    const modalContent = document.getElementById('forgotPasswordModalContentContainer');
+    if (modal && modalContent) {
+        modalContent.classList.remove('scale-100', 'opacity-100');
+        modalContent.classList.add('scale-90', 'opacity-0');
+        modal.classList.add('opacity-0');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 200);
     }
 }

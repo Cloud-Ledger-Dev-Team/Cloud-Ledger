@@ -6,7 +6,7 @@ from models.database_models import db, Budget
 # 创建预算蓝图
 budget_bp = Blueprint('budget_bp', __name__)
 
-@budget_bp.route('/', methods=['POST'])
+@budget_bp.route('/', methods=['POST'], strict_slashes=False)
 def set_budget():
     """设置或更新预算"""
     data = request.json
@@ -50,7 +50,7 @@ def set_budget():
             }
         })
 
-@budget_bp.route('/<user_id>/<month>', methods=['GET'])
+@budget_bp.route('/<user_id>/<month>', methods=['GET'], strict_slashes=False)
 def get_budget(user_id, month):
     """获取指定月份的预算"""
     budget = Budget.query.filter_by(user_id=user_id, month=month).first()
@@ -71,7 +71,7 @@ def get_budget(user_id, month):
             'error': '该月暂无预算设置'
         })
 
-@budget_bp.route('/<budget_id>', methods=['PUT'])
+@budget_bp.route('/<budget_id>', methods=['PUT'], strict_slashes=False)
 def update_budget(budget_id):
     """更新预算金额"""
     data = request.json

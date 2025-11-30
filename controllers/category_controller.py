@@ -4,7 +4,7 @@ from flask import jsonify, Blueprint, request
 # 创建分类蓝图
 category_bp = Blueprint('category_bp', __name__)
 
-@category_bp.route('/', methods=['GET'])
+@category_bp.route('/', methods=['GET'], strict_slashes=False)
 def get_categories():
     """获取预定义的收支分类"""
     # 返回预定义的收支分类
@@ -37,7 +37,7 @@ def get_categories():
         'categories': categories
     })
 
-@category_bp.route('/', methods=['POST'])
+@category_bp.route('/', methods=['POST'], strict_slashes=False)
 def add_category():
     """添加新分类"""
     # 此处可以实现动态添加分类的功能
