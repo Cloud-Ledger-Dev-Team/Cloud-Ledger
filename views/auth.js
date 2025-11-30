@@ -1,273 +1,172 @@
-// 认证相关功能
+// views/auth.js - 认证与交互逻辑
 
-// 导入模态框功能
-import { showToastModal, closeAuthModal, hideBottomPopup } from './modal.js';
-
-// 导入工具函数
+import { showToastModal, hideBottomPopup, closeForgotPasswordModal } from './modal.js';
 import { showError, hideError } from './utils.js';
 
-/**
- * 处理注册表单提交
- * @param {Event} event - 表单提交事件
- */
-export function handleRegisterFormSubmit(event) {
-    event.preventDefault();
-    console.log('注册表单提交');
+// --- 表单提交处理 ---
 
-    // 获取表单数据
-    const email = document.getElementById('registerEmail').value;
-    const username = document.getElementById('registerUsername').value;
-    const password = document.getElementById('registerPassword').value;
-    const confirmPassword = document.getElementById('confirmRegisterPassword').value;
+export async function handleRegisterFormSubmit(event) {
+    // 已经在 HTML 里写了 onsubmit="return false"，这里作为双保险
+    if (event) event.preventDefault();
+    console.log('正在提交注册...');
 
-    // 隐藏所有错误提示
-    hideError('registerEmailError');
-    hideError('registerUsernameError');
-    hideError('registerPasswordError');
-    hideError('confirmRegisterPasswordError');
+    const nameInput = document.getElementById('registerName');
+    const emailInput = document.getElementById('registerEmail');
+    const passwordInput = document.getElementById('registerPassword');
+    const confirmInput = document.getElementById('confirmRegisterPassword');
 
-    // 表单验证
+    if (!nameInput || !emailInput || !passwordInput || !confirmInput) return;
+
+    const username = nameInput.value;
+    const email = emailInput.value;
+    const password = passwordInput.value;
+    const confirmPassword = confirmInput.value;
+
+    ['registerNameError', 'registerEmailError', 'registerPasswordError', 'confirmRegisterPasswordError']
+        .forEach(id => hideError(id));
+
     let isValid = true;
-
-    // 邮箱验证
-    if (!email || !email.includes('@')) {
-        showError('registerEmailError', '请输入有效的邮箱地址');
-        isValid = false;
-    }
-
-    // 用户名验证
-    if (!username || username.trim().length < 3) {
-        showError('registerUsernameError', '用户名至少需要3个字符');
-        isValid = false;
-    }
-
-    // 密码验证
-    if (!password || password.length < 6) {
-        showError('registerPasswordError', '密码至少需要6个字符');
-        isValid = false;
-    }
-
-    // 确认密码验证
-    if (password !== confirmPassword) {
-        showError('confirmRegisterPasswordError', '两次输入的密码不一致');
-        isValid = false;
-    }
+    if (!username || username.length < 2) { showError('registerNameError', '用户名太短'); isValid = false; }
+    if (!email || !email.includes('@')) { showError('registerEmailError', '邮箱格式错误'); isValid = false; }
+    if (!password || password.length < 6) { showError('registerPasswordError', '密码至少6位'); isValid = false; }
+    if (password !== confirmPassword) { showError('confirmRegisterPasswordError', '两次密码不一致'); isValid = false; }
 
     if (isValid) {
-        // 模拟API请求注册用户
-        console.log('注册数据:', { email, username, password });
-
-        // 这里应该是一个实际的API调用
-        // 为了演示，我们假设注册成功
-        showToastModal('注册成功', '您的账户已成功创建，请登录', () => {
-            switchToLoginTab();
-        });
-
-        // 清空表单
-        document.getElementById('registerForm').reset();
+        try {
+            const result = await window.db.register({ name: username, email, password });
+            if (result.success) {
+                showToastModal('注册成功', '请登录', () => switchToLoginTab());
+                document.getElementById('registerForm').reset();
+            } else {
+                showError('registerEmailError', result.error);
+            }
+        } catch (error) {
+            showError('registerEmailError', '网络错误: ' + error.message);
+        }
     }
 }
 
-/**
- * 处理登录表单提交
- * @param {Event} event - 表单提交事件
- */
-export function handleLoginFormSubmit(event) {
-    event.preventDefault();
-    console.log('登录表单提交');
+export async function handleLoginFormSubmit(event) {
+    if (event) event.preventDefault();
+    console.log('正在提交登录...');
 
-    // 获取表单数据
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
 
-    // 隐藏所有错误提示
     hideError('loginEmailError');
     hideError('loginPasswordError');
 
-    // 表单验证
-    let isValid = true;
+    if (!email) { showError('loginEmailError', '请输入邮箱'); return; }
+    if (!password) { showError('loginPasswordError', '请输入密码'); return; }
 
-    // 邮箱验证
-    if (!email || !email.includes('@')) {
-        showError('loginEmailError', '请输入有效的邮箱地址');
-        isValid = false;
-    }
-
-    // 密码验证
-    if (!password) {
-        showError('loginPasswordError', '请输入密码');
-        isValid = false;
-    }
-
-    if (isValid) {
-        // 模拟API请求登录用户
-        console.log('登录数据:', { email, password });
-
-        // 这里应该是一个实际的API调用
-        // 为了演示，我们假设登录成功并设置localStorage
-        localStorage.setItem('token', 'mock_jwt_token');
-        localStorage.setItem('user_id', '123');
-        localStorage.setItem('username', '测试用户');
-        localStorage.setItem('user_email', email);
-
-        // 显示成功消息
-        showToastModal('登录成功', '欢迎回来！');
-        // 登录成功后直接跳转到主页面，无需等待用户点击弹窗按钮
-        setTimeout(() => {
-            window.location.href = 'cloud_ledger.html';
-        }, 1000);
+    try {
+        const result = await window.db.login(email, password);
+        if (result.success) {
+            showToastModal('登录成功', '欢迎回来！');
+            setTimeout(() => window.location.href = 'cloud_ledger.html', 1000);
+        } else {
+            showError('loginPasswordError', result.error || '登录失败');
+        }
+    } catch (error) {
+        showError('loginPasswordError', '网络错误');
     }
 }
 
-/**
- * 处理底部弹窗登录表单提交
- * @param {Event} event - 表单提交事件
- */
-export function handleBottomLoginFormSubmit(event) {
-    event.preventDefault();
-    console.log('底部弹窗登录表单提交');
-
-    // 获取表单数据
+export async function handleBottomLoginFormSubmit(event) {
+    if (event) event.preventDefault();
     const email = document.getElementById('bottomLoginEmail').value;
     const password = document.getElementById('bottomLoginPassword').value;
 
-    // 隐藏所有错误提示
     hideError('bottomLoginEmailError');
     hideError('bottomLoginPasswordError');
 
-    // 表单验证
-    let isValid = true;
+    if (!email || !password) return;
 
-    // 邮箱验证
-    if (!email || !email.includes('@')) {
-        showError('bottomLoginEmailError', '请输入有效的邮箱地址');
-        isValid = false;
-    }
-
-    // 密码验证
-    if (!password) {
-        showError('bottomLoginPasswordError', '请输入密码');
-        isValid = false;
-    }
-
-    if (isValid) {
-        // 模拟API请求登录用户
-        console.log('底部弹窗登录数据:', { email, password });
-
-        // 这里应该是一个实际的API调用
-        // 为了演示，我们假设登录成功并设置localStorage
-        localStorage.setItem('token', 'mock_jwt_token');
-        localStorage.setItem('user_id', '123');
-        localStorage.setItem('username', '测试用户');
-        localStorage.setItem('user_email', email);
-
-        // 隐藏底部弹窗
-        hideBottomPopup();
-
-        // 显示成功消息
-        showToastModal('登录成功', '欢迎回来！', () => {
-            // 跳转到主页面
-            window.location.href = 'cloud_ledger.html';
-        });
+    try {
+        const result = await window.db.login(email, password);
+        if (result.success) {
+            hideBottomPopup();
+            showToastModal('登录成功', '欢迎回来', () => window.location.href = 'cloud_ledger.html');
+        } else {
+            showError('bottomLoginPasswordError', result.error);
+        }
+    } catch (error) {
+        showError('bottomLoginPasswordError', '网络错误');
     }
 }
 
-/**
- * 处理忘记密码表单提交
- * @param {Event} event - 表单提交事件
- */
-export function handleForgotPasswordSubmit(event) {
-    event.preventDefault();
-    console.log('忘记密码表单提交');
+export async function handleForgotPasswordSubmit(event) {
+    if (event) event.preventDefault();
+    console.log('提交忘记密码...');
 
-    // 获取表单数据
-    const email = document.getElementById('forgotPasswordEmail').value;
+    const emailInput = document.getElementById('forgotEmail');
+    const email = emailInput.value;
 
-    // 隐藏错误提示
-    hideError('forgotPasswordEmailError');
-
-    // 邮箱验证
+    hideError('forgotEmailError');
     if (!email || !email.includes('@')) {
-        showError('forgotPasswordEmailError', '请输入有效的邮箱地址');
+        showError('forgotEmailError', '请输入有效邮箱');
         return;
     }
 
-    // 模拟API请求发送重置邮件
-    console.log('发送重置密码邮件到:', email);
+    const btn = document.getElementById('resetPasswordButton');
+    const oldText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 发送中...';
+    btn.disabled = true;
 
-    // 显示成功消息
-    showToastModal('邮件已发送', '请检查您的邮箱以重置密码', () => {
-        switchToLoginTab();
-    });
-
-    // 清空表单
-    document.getElementById('forgotPasswordForm').reset();
+    setTimeout(() => {
+        btn.innerHTML = oldText;
+        btn.disabled = false;
+        closeForgotPasswordModal();
+        showToastModal('邮件已发送', `重置链接已发送至 ${email}`, () => switchToLoginTab());
+        document.getElementById('forgotPasswordForm').reset();
+    }, 1000);
 }
 
-/**
- * 切换到登录标签页
- */
+// --- 【关键修复】标签页切换逻辑 ---
+
 export function switchToLoginTab() {
-    // 隐藏其他标签页内容
+    console.log('切换到登录页'); // 调试日志
     document.getElementById('registerForm').classList.add('hidden');
-    document.getElementById('forgotPasswordForm').classList.add('hidden');
-    
-    // 显示登录表单
+    document.getElementById('forgotPasswordForm')?.classList.add('hidden');
     document.getElementById('loginForm').classList.remove('hidden');
-    
-    // 更新标签页样式
-    document.getElementById('loginTab').classList.add('active');
-    document.getElementById('registerTab').classList.remove('active');
-    document.getElementById('forgotPasswordTab').classList.remove('active');
+
+    updateTabStyles('loginTab', 'registerTab');
 }
 
-/**
- * 切换到注册标签页
- */
 export function switchToRegisterTab() {
-    // 隐藏其他标签页内容
+    console.log('切换到注册页'); // 调试日志
     document.getElementById('loginForm').classList.add('hidden');
-    document.getElementById('forgotPasswordForm').classList.add('hidden');
-    
-    // 显示注册表单
+    document.getElementById('forgotPasswordForm')?.classList.add('hidden');
     document.getElementById('registerForm').classList.remove('hidden');
-    
-    // 更新标签页样式
-    document.getElementById('loginTab').classList.remove('active');
-    document.getElementById('registerTab').classList.add('active');
-    document.getElementById('forgotPasswordTab').classList.remove('active');
+
+    updateTabStyles('registerTab', 'loginTab');
 }
 
-/**
- * 切换到忘记密码标签页
- */
 export function switchToForgotPasswordTab() {
-    // 隐藏其他标签页内容
+    console.log('切换到忘记密码页');
     document.getElementById('loginForm').classList.add('hidden');
     document.getElementById('registerForm').classList.add('hidden');
-    
-    // 显示忘记密码表单
     document.getElementById('forgotPasswordForm').classList.remove('hidden');
-    
-    // 更新标签页样式
-    document.getElementById('loginTab').classList.remove('active');
-    document.getElementById('registerTab').classList.remove('active');
-    document.getElementById('forgotPasswordTab').classList.add('active');
 }
 
-/**
- * 注销当前用户
- */
+function updateTabStyles(activeId, inactiveId) {
+    const active = document.getElementById(activeId);
+    const inactive = document.getElementById(inactiveId);
+
+    if (active && inactive) {
+        const activeCls = ['bg-white', 'text-primary', 'shadow-md', 'font-bold'];
+        const inactiveCls = ['text-gray-500', 'hover:text-gray-700', 'hover:bg-gray-50', 'font-medium'];
+
+        // 移除旧类，添加新类
+        active.classList.remove(...inactiveCls);
+        active.classList.add(...activeCls);
+
+        inactive.classList.remove(...activeCls);
+        inactive.classList.add(...inactiveCls);
+    }
+}
+
 export function logout() {
-    // 清除localStorage中的用户信息
-    localStorage.removeItem('token');
-    localStorage.removeItem('user_id');
-    localStorage.removeItem('username');
-    localStorage.removeItem('user_email');
-    
-    // 显示成功消息
-    showToastModal('已注销', '您已成功注销账户', () => {
-        // 刷新页面以更新用户状态
-        location.reload();
-    });
+    localStorage.clear();
+    window.location.href = 'login_register.html';
 }

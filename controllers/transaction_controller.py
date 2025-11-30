@@ -7,7 +7,7 @@ from datetime import datetime
 # 创建交易蓝图
 transaction_bp = Blueprint('transaction_bp', __name__)
 
-@transaction_bp.route('/', methods=['POST'])
+@transaction_bp.route('/', methods=['POST'], strict_slashes=False)
 def add_transaction():
     """添加收支记录"""
     data = request.json
@@ -41,7 +41,7 @@ def add_transaction():
         }
     })
 
-@transaction_bp.route('/', methods=['GET'])
+@transaction_bp.route('/', methods=['GET'], strict_slashes=False)
 def get_transactions():
     """获取收支记录列表"""
     user_id = request.args.get('user_id')
@@ -70,7 +70,7 @@ def get_transactions():
         'transactions': transactions
     })
 
-@transaction_bp.route('/<transaction_id>', methods=['PUT'])
+@transaction_bp.route('/<transaction_id>', methods=['PUT'], strict_slashes=False)
 def update_transaction(transaction_id):
     """更新收支记录"""
     data = request.json
@@ -109,7 +109,7 @@ def update_transaction(transaction_id):
         }
     })
 
-@transaction_bp.route('/<transaction_id>', methods=['DELETE'])
+@transaction_bp.route('/<transaction_id>', methods=['DELETE'], strict_slashes=False)
 def delete_transaction(transaction_id):
     """删除收支记录"""
     # 查找交易记录

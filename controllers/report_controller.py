@@ -6,7 +6,7 @@ from models.database_models import db, Bill, Budget
 # 创建报表蓝图
 report_bp = Blueprint('report_bp', __name__)
 
-@report_bp.route('/monthly/<user_id>/<month>', methods=['GET'])
+@report_bp.route('/monthly/<user_id>/<month>', methods=['GET'], strict_slashes=False)
 def get_monthly_stats(user_id, month):
     """获取月度统计数据"""
     # 解析年月
@@ -55,7 +55,7 @@ def get_monthly_stats(user_id, month):
         }
     })
 
-@report_bp.route('/trend/<user_id>', methods=['GET'])
+@report_bp.route('/trend/<user_id>', methods=['GET'], strict_slashes=False)
 def get_expense_trend(user_id):
     """获取支出趋势数据"""
     months = int(request.args.get('months', 6))
