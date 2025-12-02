@@ -247,9 +247,17 @@
     </div>
 
     <!-- 署名界面 -->
-    <footer class="w-full py-6 text-white text-center flex-shrink-0">
+    <!-- 统一风格的 Footer (登录页) -->
+    <footer class="w-full py-6 text-white text-center flex-shrink-0 bg-transparent">
         <div class="text-sm opacity-80">
-            © 2025 云记账 Cloud Ledger. All rights reserved.
+            <div class="mb-2">
+                Developed by the
+                <a href="https://github.com/Cloud-Ledger-Dev-Team" target="_blank"
+                    class="hover:text-gray-200 transition-colors">
+                    Cloud Ledger Dev Team
+                </a>
+            </div>
+            © 2025 云记账. All rights reserved.
         </div>
     </footer>
 
@@ -279,7 +287,7 @@
             </div>
 
             <!-- 表单内容 -->
-            <form id="forgotPasswordForm" onsubmit="return false;"> <!-- 防止刷新 -->
+            <form id="forgotPasswordForm" onsubmit="return false;">
                 <div class="mb-6">
                     <label for="forgotEmail" class="block text-sm font-semibold text-gray-700 mb-2">邮箱地址</label>
                     <div class="relative">
