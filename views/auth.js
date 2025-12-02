@@ -1,4 +1,4 @@
-// views/auth.js - 认证与交互逻辑
+// views/auth.js - 认证与交互逻辑 (带来源标记版)
 
 import { showToastModal, hideBottomPopup, closeForgotPasswordModal } from './modal.js';
 import { showError, hideError } from './utils.js';
@@ -6,7 +6,6 @@ import { showError, hideError } from './utils.js';
 // --- 表单提交处理 ---
 
 export async function handleRegisterFormSubmit(event) {
-    // 已经在 HTML 里写了 onsubmit="return false"，这里作为双保险
     if (event) event.preventDefault();
     console.log('正在提交注册...');
 
@@ -62,6 +61,9 @@ export async function handleLoginFormSubmit(event) {
     try {
         const result = await window.db.login(email, password);
         if (result.success) {
+            // 【关键修改】设置来源标记，告诉主页显示用户信息
+            sessionStorage.setItem('show_user_panel', 'true');
+
             showToastModal('登录成功', '欢迎回来！');
             setTimeout(() => window.location.href = 'cloud_ledger.html', 1000);
         } else {
@@ -85,6 +87,9 @@ export async function handleBottomLoginFormSubmit(event) {
     try {
         const result = await window.db.login(email, password);
         if (result.success) {
+            // 【关键修改】底部弹窗登录也算正规登录
+            sessionStorage.setItem('show_user_panel', 'true');
+
             hideBottomPopup();
             showToastModal('登录成功', '欢迎回来', () => window.location.href = 'cloud_ledger.html');
         } else {
@@ -97,7 +102,6 @@ export async function handleBottomLoginFormSubmit(event) {
 
 export async function handleForgotPasswordSubmit(event) {
     if (event) event.preventDefault();
-    console.log('提交忘记密码...');
 
     const emailInput = document.getElementById('forgotEmail');
     const email = emailInput.value;
@@ -122,28 +126,23 @@ export async function handleForgotPasswordSubmit(event) {
     }, 1000);
 }
 
-// --- 【关键修复】标签页切换逻辑 ---
+// --- 标签页切换逻辑 ---
 
 export function switchToLoginTab() {
-    console.log('切换到登录页'); // 调试日志
     document.getElementById('registerForm').classList.add('hidden');
     document.getElementById('forgotPasswordForm')?.classList.add('hidden');
     document.getElementById('loginForm').classList.remove('hidden');
-
     updateTabStyles('loginTab', 'registerTab');
 }
 
 export function switchToRegisterTab() {
-    console.log('切换到注册页'); // 调试日志
     document.getElementById('loginForm').classList.add('hidden');
     document.getElementById('forgotPasswordForm')?.classList.add('hidden');
     document.getElementById('registerForm').classList.remove('hidden');
-
     updateTabStyles('registerTab', 'loginTab');
 }
 
 export function switchToForgotPasswordTab() {
-    console.log('切换到忘记密码页');
     document.getElementById('loginForm').classList.add('hidden');
     document.getElementById('registerForm').classList.add('hidden');
     document.getElementById('forgotPasswordForm').classList.remove('hidden');
@@ -157,10 +156,8 @@ function updateTabStyles(activeId, inactiveId) {
         const activeCls = ['bg-white', 'text-primary', 'shadow-md', 'font-bold'];
         const inactiveCls = ['text-gray-500', 'hover:text-gray-700', 'hover:bg-gray-50', 'font-medium'];
 
-        // 移除旧类，添加新类
         active.classList.remove(...inactiveCls);
         active.classList.add(...activeCls);
-
         inactive.classList.remove(...activeCls);
         inactive.classList.add(...inactiveCls);
     }
@@ -168,5 +165,6 @@ function updateTabStyles(activeId, inactiveId) {
 
 export function logout() {
     localStorage.clear();
+    sessionStorage.clear(); // 清除会话标记
     window.location.href = 'login_register.html';
 }

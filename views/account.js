@@ -1,10 +1,11 @@
-// views/account.js - 账户管理核心逻辑 (修复版)
+// views/account.js - 账户管理核心逻辑 (最终修正版)
 
 import { showToastModal } from './modal.js';
 
-// --- 1. 基础加载 (直接导出，供 app.js 使用) ---
+// --- 1. 基础加载 ---
 
 export async function loadAccounts() {
+    // 刷新数据
     const currentUser = window.db.getCurrentUser();
     if (!currentUser) return;
 
@@ -19,7 +20,6 @@ export async function loadAccounts() {
     }
 }
 
-// 内部辅助函数：渲染首页右侧列表
 function renderDashboardAccountList(accounts) {
     const container = document.getElementById('accountList');
     if (!container) return;
@@ -54,13 +54,11 @@ function renderDashboardAccountList(accounts) {
     });
 }
 
-// 内部辅助函数：填充下拉框
 function populateAccountSelect(accounts) {
     const select = document.getElementById('accountSelect');
     if (!select) return;
 
     const currentValue = select.value;
-
     select.innerHTML = '<option value="">请选择账户</option>';
     accounts.forEach(account => {
         const option = document.createElement('option');
@@ -68,25 +66,28 @@ function populateAccountSelect(accounts) {
         option.textContent = `${account.name} (¥${account.balance})`;
         select.appendChild(option);
     });
-
     if (currentValue) select.value = currentValue;
 }
 
-// --- 2. 弹窗与交互逻辑 (挂载到 window 供 HTML onclick 使用) ---
+// --- 2. 弹窗逻辑 (挂载到 Window) ---
 
-// 打开弹窗
+// 打开账户弹窗 (新建或编辑)
 window.openAccountModal = function (id = '', name = '', type = '现金', balance = '') {
     const modal = document.getElementById('accountModal');
-    if (!modal) return;
+    if (!modal) {
+        console.error("找不到 ID 为 accountModal 的弹窗元素！请检查 HTML");
+        return;
+    }
 
+    // 填充表单
     document.getElementById('accModalId').value = id;
     document.getElementById('accModalName').value = name;
     document.getElementById('accModalType').value = type;
     document.getElementById('accModalBalance').value = balance;
 
-    const title = document.getElementById('accModalTitle');
-    if (title) title.textContent = id ? '编辑账户' : '添加账户';
+    document.getElementById('accModalTitle').textContent = id ? '编辑账户' : '新建账户';
 
+    // 显示
     modal.classList.remove('hidden');
     setTimeout(() => {
         modal.classList.remove('opacity-0');
@@ -95,7 +96,7 @@ window.openAccountModal = function (id = '', name = '', type = '现金', balance
     }, 10);
 }
 
-// 关闭弹窗
+// 关闭账户弹窗
 window.closeAccountModal = function () {
     const modal = document.getElementById('accountModal');
     const content = document.getElementById('accModalContent');
@@ -106,7 +107,7 @@ window.closeAccountModal = function () {
     setTimeout(() => modal.classList.add('hidden'), 200);
 }
 
-// 提交表单
+// 提交保存
 window.handleAccountSubmit = async function () {
     const id = document.getElementById('accModalId').value;
     const name = document.getElementById('accModalName').value;
@@ -134,11 +135,13 @@ window.handleAccountSubmit = async function () {
         if (result.success) {
             showToastModal('成功', id ? '账户已更新' : '账户已添加');
             window.closeAccountModal();
-            loadAccounts(); // 刷新
+            loadAccounts(); // 刷新侧边栏
 
+            // 如果在管理页，刷新管理列表
             const activeNav = document.querySelector('.nav-item-active');
             if (activeNav && activeNav.textContent.includes('账户管理')) {
-                activeNav.click(); // 重新触发页面加载以更新列表
+                // 模拟重新点击导航来刷新
+                activeNav.click();
             }
         } else {
             showToastModal('错误', result.error);
@@ -170,9 +173,7 @@ window.deleteAccount = async function (accountId) {
     }
 }
 
-// --- 3. 兼容导出 (供 app.js 导入使用) ---
-// 【关键修复】这里只导出 app.js 需要的别名，不重复导出 loadAccounts
-
+// --- 3. 导出兼容 ---
 export const saveAccount = () => window.handleAccountSubmit();
 export const showAccountEditModal = () => window.openAccountModal();
 export const closeAccountEditModal = () => window.closeAccountModal();
