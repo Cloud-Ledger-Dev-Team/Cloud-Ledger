@@ -8,7 +8,6 @@
 ```
 Cloud-Ledger/
 ├── .gitignore                     # Git忽略文件
-├── POSTMAN测试指南.md             # API测试指南
 ├── README.md                      # 项目说明文档
 ├── controllers/                   # 控制器层，处理业务逻辑
 │   ├── account_controller.py      # 账户管理控制器
@@ -31,12 +30,21 @@ Cloud-Ledger/
 │   ├── database_models.py         # 数据库模型定义
 │   ├── financial_functions.sql    # 财务功能SQL脚本
 │   ├── init_db.py                 # 数据库初始化脚本
-│   └── sql.sql                    # 数据库初始化SQL脚本
+│   ├── init_db_fix.py             # 数据库初始化修复脚本
+│   ├── repair_database.py         # 数据库修复脚本
+│   ├── sql.sql                    # 数据库初始化SQL脚本
+│   └── verify_database.py         # 数据库验证脚本
 ├── requirements.txt               # 项目依赖文件
-├── sqlite提示词                    # SQLite提示词
 ├── tests/                         # 测试脚本目录
+│   ├── POSTMAN测试指南.md         # API测试指南
+│   ├── auth_test.html             # 认证测试页面
+│   ├── e2e_test.js                # 端到端测试脚本
 │   ├── test_all_crud.ps1          # 全CRUD测试脚本
+│   ├── test_api.js                # API测试脚本
 │   ├── test_crud_en.ps1           # 英文CRUD测试脚本
+│   ├── test_login.py              # 登录测试脚本
+│   ├── test_logout.js             # 登出测试脚本
+│   ├── test_popup.js              # 弹窗测试脚本
 │   ├── test_scripts.ps1           # 测试脚本集合
 │   └── test_select.sql            # 选择查询测试
 └── views/                         # 视图层，前端文件
@@ -53,8 +61,6 @@ Cloud-Ledger/
     ├── navigation.js              # 导航管理脚本
     ├── stat.js                    # 统计功能脚本
     ├── styles.css                 # 样式文件
-    ├── test_logout.js             # 登出测试脚本
-    ├── test_popup.js              # 弹窗测试脚本
     └── utils.js                   # 工具函数脚本
 ```
 
@@ -68,6 +74,7 @@ Cloud-Ledger/
 
 ### 1. 安装依赖
 
+在项目根目录下运行：
 ```bash
 pip install -r requirements.txt
 ```
@@ -75,15 +82,12 @@ pip install -r requirements.txt
 ### 2. 初始化数据库
 
 ```bash
-cd controllers
-pip install flask_jwt_extended  //若报错，输入 python -m pip install -r requirements.txt  
 python models/init_db.py
 ```
 
 ### 3. 运行应用
 
 ```bash
-cd ..
 python main.py
 ```
 
