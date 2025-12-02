@@ -1,10 +1,9 @@
-// views/bill.js
+// views/bill.js - 账单管理核心逻辑
 
 import { showToastModal } from './modal.js';
 import { loadAccounts } from './account.js';
 import { renderCharts } from './stat.js';
 
-// ... (分类数据保持不变，为了简洁我直接写在这里) ...
 export const expenseCategories = [
     { id: 1, name: '餐饮', icon: 'fas fa-utensils' },
     { id: 2, name: '交通', icon: 'fas fa-car' },
@@ -24,15 +23,30 @@ export const incomeCategories = [
     { id: 105, name: '其他', icon: 'fas fa-ellipsis-h' }
 ];
 
-// --- 基础功能 ---
+// 快捷选项数据配置
+const expenseQuickOptions = [
+    { name: '午餐', category: '餐饮', amount: 20 },
+    { name: '地铁', category: '交通', amount: 10 },
+    { name: '日用品', category: '购物', amount: 50 },
+    { name: '晚餐', category: '餐饮', amount: 40 }
+];
 
+const incomeQuickOptions = [
+    { name: '工资', category: '工资', amount: 5000 },
+    { name: '奖金', category: '奖金', amount: 1000 },
+    { name: '兼职', category: '兼职', amount: 200 },
+    { name: '红包', category: '礼金', amount: 100 }
+];
+
+// 初始化分类点击
 export function initCategorySelection() {
     const items = document.querySelectorAll('.category-item');
     if (items.length === 0) return;
 
     items.forEach(item => {
-        const newItem = item.cloneNode(true);
+        const newItem = item.cloneNode(true); // 移除旧事件
         item.parentNode.replaceChild(newItem, item);
+
         newItem.addEventListener('click', function () {
             document.querySelectorAll('.category-item').forEach(i => {
                 i.classList.remove('selected', 'border-indigo-500', 'bg-indigo-50', 'text-indigo-600');
@@ -45,38 +59,70 @@ export function initCategorySelection() {
     });
 }
 
+// 【关键修复】切换收支类型，同时渲染快捷按钮
 export function switchBillType(type) {
     const expenseBtn = document.getElementById('expenseTab');
     const incomeBtn = document.getElementById('incomeTab');
+
     if (expenseBtn && incomeBtn) {
         if (type === 'expense') {
             expenseBtn.classList.add('border-b-2', 'border-indigo-500', 'text-indigo-600');
             expenseBtn.classList.remove('text-gray-500');
             incomeBtn.classList.remove('border-b-2', 'border-indigo-500', 'text-indigo-600');
             incomeBtn.classList.add('text-gray-500');
+
             document.getElementById('expenseCategories').classList.remove('hidden');
             document.getElementById('incomeCategories').classList.add('hidden');
+
+            renderQuickOptions(expenseQuickOptions); // 渲染支出快捷项
         } else {
             incomeBtn.classList.add('border-b-2', 'border-indigo-500', 'text-indigo-600');
             incomeBtn.classList.remove('text-gray-500');
             expenseBtn.classList.remove('border-b-2', 'border-indigo-500', 'text-indigo-600');
             expenseBtn.classList.add('text-gray-500');
+
             document.getElementById('expenseCategories').classList.add('hidden');
             document.getElementById('incomeCategories').classList.remove('hidden');
+
+            renderQuickOptions(incomeQuickOptions); // 渲染收入快捷项
         }
     }
+
     document.getElementById('billType').value = type;
     setTimeout(initCategorySelection, 100);
 }
 
+// 内部渲染函数
+function renderQuickOptions(options) {
+    const container = document.getElementById('quickInputOptions');
+    if (!container) return;
+
+    container.innerHTML = ''; // 清空旧的
+    options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'quick-entry-btn px-4 py-2 bg-gray-100 rounded-full text-gray-700 text-sm transition-colors hover:bg-gray-200';
+        btn.dataset.category = opt.category;
+        btn.dataset.amount = opt.amount;
+        btn.textContent = `${opt.name} ${opt.amount}元`;
+        container.appendChild(btn);
+    });
+
+    initQuickInputOptions(); // 重新绑定点击事件
+}
+
+// 初始化快捷按钮点击
 export function initQuickInputOptions() {
     const container = document.getElementById('quickInputOptions');
     if (!container) return;
+
     container.onclick = function (e) {
         const btn = e.target.closest('.quick-entry-btn');
         if (!btn) return;
+
         e.preventDefault();
         document.getElementById('billAmount').value = btn.dataset.amount;
+
+        // 自动点击对应分类
         const catItem = document.querySelector(`.category-item[data-category="${btn.dataset.category}"]`);
         if (catItem) {
             const clickEvent = new MouseEvent('click', { view: window, bubbles: true, cancelable: true });
@@ -85,8 +131,7 @@ export function initQuickInputOptions() {
     };
 }
 
-// --- 记账 (新增) ---
-
+// 提交表单
 export async function handleBillFormSubmit(event) {
     event.preventDefault();
     const currentUser = window.db.getCurrentUser();
@@ -129,8 +174,7 @@ export async function handleBillFormSubmit(event) {
     }
 }
 
-// --- 加载列表 (Read) ---
-
+// 加载列表
 export async function loadBills(filters = {}) {
     const currentUser = window.db.getCurrentUser();
     if (!currentUser) return;
@@ -187,88 +231,6 @@ function updateDashboardCards(bills) {
     document.getElementById('totalIncome').textContent = totalIncome.toFixed(2);
     document.getElementById('totalExpense').textContent = totalExpense.toFixed(2);
     document.getElementById('totalBalance').textContent = (totalIncome - totalExpense).toFixed(2);
-}
-
-// --- 【新增】删除账单逻辑 ---
-
-window.deleteBill = async function (billId) {
-    if (!confirm('确定要删除这条账单吗？')) return;
-    try {
-        const result = await window.db.deleteBill(billId);
-        if (result.success) {
-            showToastModal('成功', '账单已删除');
-            // 刷新当前页面
-            // 如果在主页，刷新主页列表；如果在管理页，刷新管理页列表
-            // 简单起见，重新点击一次当前的导航
-            const activeNav = document.querySelector('.nav-item-active');
-            if (activeNav) activeNav.click();
-        } else {
-            showToastModal('错误', result.error);
-        }
-    } catch (e) {
-        showToastModal('错误', e.message);
-    }
-}
-
-// --- 【新增】编辑账单逻辑 ---
-
-window.openEditBillModal = function (id, amount, category, desc, date, type) {
-    const modal = document.getElementById('editBillModal');
-    if (!modal) return;
-
-    // 填充数据
-    document.getElementById('editBillId').value = id;
-    document.getElementById('editBillAmount').value = amount;
-    document.getElementById('editBillCategory').value = category;
-    document.getElementById('editBillDate').value = date;
-    document.getElementById('editBillDesc').value = desc;
-
-    // 显示弹窗
-    modal.classList.remove('hidden');
-    setTimeout(() => {
-        modal.classList.remove('opacity-0');
-        document.getElementById('editBillContent').classList.remove('scale-90', 'opacity-0');
-    }, 10);
-}
-
-window.closeEditBillModal = function () {
-    const modal = document.getElementById('editBillModal');
-    const content = document.getElementById('editBillContent');
-    if (!modal) return;
-
-    content.classList.add('scale-90', 'opacity-0');
-    modal.classList.add('opacity-0');
-    setTimeout(() => modal.classList.add('hidden'), 200);
-}
-
-window.submitEditBill = async function () {
-    const id = document.getElementById('editBillId').value;
-    const amount = document.getElementById('editBillAmount').value;
-    const category = document.getElementById('editBillCategory').value;
-    const date = document.getElementById('editBillDate').value;
-    const desc = document.getElementById('editBillDesc').value;
-
-    const data = {
-        amount: parseFloat(amount),
-        category: category,
-        date: date,
-        description: desc
-    };
-
-    try {
-        const result = await window.db.updateBill(id, data);
-        if (result.success) {
-            showToastModal('成功', '账单已更新');
-            window.closeEditBillModal();
-            // 刷新列表
-            const activeNav = document.querySelector('.nav-item-active');
-            if (activeNav) activeNav.click();
-        } else {
-            showToastModal('错误', result.error);
-        }
-    } catch (e) {
-        showToastModal('错误', e.message);
-    }
 }
 
 // 导出

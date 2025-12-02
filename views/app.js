@@ -1,4 +1,4 @@
-// views/app.js - 前端主入口 (最终修复版)
+// views/app.js - 前端主入口 (修复快捷记账初始化)
 
 import {
     setupPasswordToggle,
@@ -58,7 +58,6 @@ export function initApp() {
     setupNavigation();
     bindEventListeners();
 
-    // 检查登录状态
     if (checkUserLoggedIn()) {
         if (document.getElementById('userInfoPanel')) {
             initializeAppContent();
@@ -66,13 +65,14 @@ export function initApp() {
     }
 }
 
-// 加载应用核心数据
 function initializeAppContent() {
     const dateInput = document.getElementById('billDate');
     if (dateInput) dateInput.valueAsDate = new Date();
 
-    if (typeof initCategorySelection === 'function') initCategorySelection();
-    if (typeof initQuickInputOptions === 'function') initQuickInputOptions();
+    // 【关键修复】手动触发一次类型切换，强制渲染快捷选项
+    if (typeof switchBillType === 'function') {
+        switchBillType('expense'); // 初始化显示支出项
+    }
 
     renderUserInfo();
 
@@ -80,7 +80,6 @@ function initializeAppContent() {
     if (typeof loadBills === 'function') loadBills();
 }
 
-// 渲染用户信息面板
 function renderUserInfo() {
     const username = localStorage.getItem('username');
     const email = localStorage.getItem('user_email');
@@ -96,32 +95,7 @@ function renderUserInfo() {
     }
 }
 
-// 绑定事件
 function bindEventListeners() {
-    // --- 1. 登录/注册页面交互 (之前漏掉的部分) ---
-
-    // 标签页切换
-    const loginTab = document.getElementById('loginTab');
-    if (loginTab) loginTab.addEventListener('click', switchToLoginTab);
-
-    const registerTab = document.getElementById('registerTab');
-    if (registerTab) registerTab.addEventListener('click', switchToRegisterTab);
-
-    // 忘记密码链接点击
-    const forgotLink = document.getElementById('forgotPasswordLink');
-    if (forgotLink) {
-        forgotLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            showForgotPasswordModal();
-        });
-    }
-
-    // 忘记密码弹窗关闭
-    const closeForgotBtn = document.getElementById('closeForgotPasswordModal');
-    if (closeForgotBtn) closeForgotBtn.addEventListener('click', closeForgotPasswordModal);
-
-    // --- 2. 表单提交 ---
-
     const loginForm = document.getElementById('loginForm');
     if (loginForm) loginForm.addEventListener('submit', handleLoginFormSubmit);
 
@@ -131,13 +105,26 @@ function bindEventListeners() {
     const forgotForm = document.getElementById('forgotPasswordForm');
     if (forgotForm) forgotForm.addEventListener('submit', handleForgotPasswordSubmit);
 
-    // --- 3. 主页交互 ---
+    const loginTab = document.getElementById('loginTab');
+    if (loginTab) loginTab.addEventListener('click', switchToLoginTab);
 
-    // 记账按钮
+    const registerTab = document.getElementById('registerTab');
+    if (registerTab) registerTab.addEventListener('click', switchToRegisterTab);
+
+    const forgotLink = document.getElementById('forgotPasswordLink');
+    if (forgotLink) {
+        forgotLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showForgotPasswordModal();
+        });
+    }
+
+    const closeForgotBtn = document.getElementById('closeForgotPasswordModal');
+    if (closeForgotBtn) closeForgotBtn.addEventListener('click', closeForgotPasswordModal);
+
     const saveBillBtn = document.getElementById('saveBillButton');
     if (saveBillBtn) saveBillBtn.addEventListener('click', handleBillFormSubmit);
 
-    // 账户保存
     const accountForm = document.getElementById('accountForm');
     if (accountForm) {
         accountForm.addEventListener('submit', function (e) {
@@ -146,22 +133,18 @@ function bindEventListeners() {
         });
     }
 
-    // 切换收支类型
     const expenseTab = document.getElementById('expenseTab');
     const incomeTab = document.getElementById('incomeTab');
     if (expenseTab) expenseTab.addEventListener('click', () => switchBillType('expense'));
     if (incomeTab) incomeTab.addEventListener('click', () => switchBillType('income'));
 
-    // 弹窗关闭
     const closeToastBtn = document.getElementById('closeToastModalButton');
     if (closeToastBtn) closeToastBtn.addEventListener('click', closeToastModal);
 
-    // 登出按钮
     const logoutBtn = document.getElementById('logoutButton');
     if (logoutBtn) logoutBtn.addEventListener('click', logout);
 }
 
-// 暴露全局函数
 window.setupPasswordToggle = setupPasswordToggle;
 window.initPasswordToggles = initPasswordToggles;
 window.showError = showError;

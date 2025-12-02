@@ -25,69 +25,29 @@
         }
     </script>
     <style>
-        /* 导航项激活状态 */
         .nav-item-active {
             background-color: rgba(16, 185, 129, 0.1);
-            /* primary/10 */
             color: #10b981;
-            /* primary */
             font-weight: 500;
-            /* font-medium */
             border-right: 4px solid #10b981;
-            /* border-r-4 border-primary */
         }
 
-        /* 导航项悬停效果 */
         .nav-item-hover {
             transition: color 200ms, background-color 200ms;
         }
 
         .nav-item-hover:hover {
             background-color: #f3f4f6;
-            /* gray-100 */
-        }
-
-        /* 卡片阴影效果 */
-        .card-shadow {
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            /* shadow-md */
-            transition: box-shadow 300ms;
-        }
-
-        .card-shadow:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            /* shadow-lg */
-        }
-
-        /* 分类项样式 */
-        .category-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-            /* p-4 */
-            border-radius: 0.5rem;
-            /* rounded-lg */
-            border: 1px solid #e5e7eb;
-            /* border border-gray-200 */
-            cursor: pointer;
-            transition: all 200ms;
         }
 
         .category-item:hover {
             border-color: rgba(16, 185, 129, 0.5);
-            /* border-primary/50 */
             background-color: rgba(16, 185, 129, 0.05);
-            /* bg-primary/5 */
         }
 
-        /* 选中的分类项 */
         .category-item.selected {
             border-color: #10b981;
-            /* border-primary */
             background-color: rgba(16, 185, 129, 0.1);
-            /* bg-primary/10 */
         }
     </style>
 </head>
@@ -96,13 +56,11 @@
     <div class="flex flex-1 overflow-hidden">
         <!-- 左侧导航栏 -->
         <div class="w-64 bg-white border-r border-gray-200 flex-shrink-0 hidden md:flex flex-col">
-            <!-- 品牌Logo -->
             <div class="h-16 flex items-center justify-center bg-gradient-purple text-white">
                 <i class="fas fa-cloud text-2xl mr-2"></i>
                 <span class="font-bold text-xl">Cloud Ledger</span>
             </div>
 
-            <!-- 导航菜单 -->
             <nav class="flex-1 py-6 px-3 space-y-1">
                 <a href="#" class="nav-item-active flex items-center px-4 py-3 text-sm rounded-md">
                     <i class="fas fa-plus-circle text-lg w-6 text-center"></i>
@@ -122,17 +80,17 @@
                 </a>
             </nav>
 
-            <!-- 用户信息 -->
             <div class="p-4 border-t border-gray-200 hidden" id="userInfoPanel">
                 <div class="flex items-center">
                     <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
                         <i class="fas fa-user text-indigo-500"></i>
                     </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-800" id="username">用户名</p>
-                        <p class="text-xs text-gray-500" id="userEmail">user@example.com</p>
+                    <div class="ml-3 overflow-hidden">
+                        <p class="text-sm font-medium text-gray-800 truncate w-24" id="username">User</p>
+                        <p class="text-xs text-gray-500 truncate w-24" id="userEmail">@email</p>
                     </div>
-                    <button id="logoutButton" class="ml-auto text-gray-400 hover:text-gray-600">
+                    <button id="logoutButton" class="ml-auto text-gray-400 hover:text-red-500 transition-colors"
+                        title="退出登录">
                         <i class="fas fa-sign-out-alt"></i>
                     </button>
                 </div>
@@ -141,244 +99,180 @@
 
         <!-- 主内容区域 -->
         <div class="flex-1 overflow-auto p-4 relative z-10" id="dashboard">
-            <!-- 1. 给原本的主页内容包一个 div，ID叫 view-home -->
+            <!-- 1. 原版主页内容 -->
             <div id="view-home">
-                <!-- 顶部标题和操作栏 -->
                 <div class="flex justify-between items-center mb-4">
                     <h1 class="text-2xl font-bold text-white">记账录入</h1>
                     <div class="flex space-x-4">
-                        <button
-                            class="bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                            <i class="fas fa-calendar-alt mr-2"></i>今天
-                        </button>
                         <button id="filterButton"
-                            class="bg-primary text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors">
+                            class="bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                             <i class="fas fa-filter mr-2"></i>筛选
                         </button>
                     </div>
                 </div>
 
-                <!-- 数据统计卡片 -->
+                <!-- 统计卡片 -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     <div class="bg-white p-6 rounded-lg shadow-md">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-semibold text-gray-700">总收入</h3>
-                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                                <i class="fas fa-arrow-up text-green-500"></i>
-                            </div>
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center"><i
+                                    class="fas fa-arrow-up text-green-500"></i></div>
                         </div>
                         <p class="text-2xl font-bold text-green-500">¥<span id="totalIncome">0.00</span></p>
                     </div>
-
                     <div class="bg-white p-6 rounded-lg shadow-md">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-semibold text-gray-700">总支出</h3>
-                            <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                                <i class="fas fa-arrow-down text-red-500"></i>
-                            </div>
+                            <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center"><i
+                                    class="fas fa-arrow-down text-red-500"></i></div>
                         </div>
                         <p class="text-2xl font-bold text-red-500">¥<span id="totalExpense">0.00</span></p>
                     </div>
-
                     <div class="bg-white p-6 rounded-lg shadow-md">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-semibold text-gray-700">结余</h3>
-                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                <i class="fas fa-balance-scale text-blue-500"></i>
-                            </div>
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center"><i
+                                    class="fas fa-balance-scale text-blue-500"></i></div>
                         </div>
                         <p class="text-2xl font-bold text-blue-500">¥<span id="totalBalance">0.00</span></p>
                     </div>
                 </div>
 
-                <!-- 主要内容区 -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- 左侧：记账录入 -->
                     <div class="lg:col-span-2 space-y-6 relative z-10">
                         <div class="bg-white p-6 rounded-lg shadow-md">
                             <h3 class="text-xl font-bold text-gray-800 mb-6">账单录入</h3>
 
-                            <!-- 收支切换标签 -->
+                            <!-- 收支切换 -->
                             <div class="flex border-b mb-6">
                                 <button id="expenseTab"
                                     class="flex-1 py-3 text-center font-medium text-indigo-600 border-b-2 border-indigo-500">
-                                    <i class="fas fa-minus-circle mr-2"></i>支出
+                                    <i class="fas fa-minus-circle mr-2"></i> 支出
                                 </button>
                                 <button id="incomeTab" class="flex-1 py-3 text-center font-medium text-gray-500">
-                                    <i class="fas fa-plus-circle mr-2"></i>收入
+                                    <i class="fas fa-plus-circle mr-2"></i> 收入
                                 </button>
                             </div>
 
                             <input type="hidden" id="billType" value="expense">
+                            <input type="hidden" id="billCategory" value="">
 
-                            <!-- 支出分类选择 -->
+                            <!-- 支出分类 (带标题的容器) -->
                             <div id="expenseCategories" class="mb-6">
                                 <h4 class="text-gray-700 font-medium mb-3">选择分类</h4>
                                 <div class="grid grid-cols-4 gap-3">
                                     <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                        data-category="餐饮">
-                                        <i class="fas fa-utensils text-xl text-amber-500 mb-2"></i>
-                                        <span class="text-sm">餐饮</span>
-                                    </div>
+                                        data-category="餐饮"><i
+                                            class="fas fa-utensils text-xl text-amber-500 mb-2"></i><span
+                                            class="text-sm">餐饮</span></div>
                                     <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                        data-category="购物">
-                                        <i class="fas fa-shopping-bag text-xl text-purple-500 mb-2"></i>
-                                        <span class="text-sm">购物</span>
-                                    </div>
+                                        data-category="购物"><i
+                                            class="fas fa-shopping-bag text-xl text-purple-500 mb-2"></i><span
+                                            class="text-sm">购物</span></div>
                                     <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                        data-category="交通">
-                                        <i class="fas fa-car text-xl text-blue-500 mb-2"></i>
-                                        <span class="text-sm">交通</span>
-                                    </div>
+                                        data-category="交通"><i class="fas fa-car text-xl text-blue-500 mb-2"></i><span
+                                            class="text-sm">交通</span></div>
                                     <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                        data-category="娱乐">
-                                        <i class="fas fa-film text-xl text-red-500 mb-2"></i>
-                                        <span class="text-sm">娱乐</span>
-                                    </div>
+                                        data-category="娱乐"><i class="fas fa-film text-xl text-red-500 mb-2"></i><span
+                                            class="text-sm">娱乐</span></div>
                                     <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                        data-category="住房">
-                                        <i class="fas fa-home text-xl text-green-500 mb-2"></i>
-                                        <span class="text-sm">住房</span>
-                                    </div>
+                                        data-category="住房"><i class="fas fa-home text-xl text-green-500 mb-2"></i><span
+                                            class="text-sm">住房</span></div>
                                     <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                        data-category="医疗">
-                                        <i class="fas fa-heartbeat text-xl text-pink-500 mb-2"></i>
-                                        <span class="text-sm">医疗</span>
-                                    </div>
+                                        data-category="医疗"><i
+                                            class="fas fa-heartbeat text-xl text-pink-500 mb-2"></i><span
+                                            class="text-sm">医疗</span></div>
                                     <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                        data-category="教育">
-                                        <i class="fas fa-book text-xl text-indigo-500 mb-2"></i>
-                                        <span class="text-sm">教育</span>
-                                    </div>
+                                        data-category="教育"><i class="fas fa-book text-xl text-indigo-500 mb-2"></i><span
+                                            class="text-sm">教育</span></div>
                                     <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                        data-category="其他">
-                                        <i class="fas fa-ellipsis-h text-xl text-gray-500 mb-2"></i>
-                                        <span class="text-sm">其他</span>
-                                    </div>
+                                        data-category="其他"><i
+                                            class="fas fa-ellipsis-h text-xl text-gray-500 mb-2"></i><span
+                                            class="text-sm">其他</span></div>
                                 </div>
                             </div>
 
-                            <!-- 收入分类选择 -->
+                            <!-- 收入分类 (带标题的容器，包含完整的8个分类) -->
                             <div id="incomeCategories" class="mb-6 hidden">
                                 <h4 class="text-gray-700 font-medium mb-3">选择分类</h4>
                                 <div class="grid grid-cols-4 gap-3">
                                     <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                        data-category="工资">
-                                        <i class="fas fa-wallet text-xl text-green-500 mb-2"></i>
-                                        <span class="text-sm">工资</span>
-                                    </div>
+                                        data-category="工资"><i
+                                            class="fas fa-wallet text-xl text-green-500 mb-2"></i><span
+                                            class="text-sm">工资</span></div>
                                     <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                        data-category="奖金">
-                                        <i class="fas fa-gift text-xl text-red-500 mb-2"></i>
-                                        <span class="text-sm">奖金</span>
-                                    </div>
+                                        data-category="奖金"><i class="fas fa-gift text-xl text-red-500 mb-2"></i><span
+                                            class="text-sm">奖金</span></div>
                                     <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                        data-category="投资">
-                                        <i class="fas fa-chart-line text-xl text-blue-500 mb-2"></i>
-                                        <span class="text-sm">投资</span>
-                                    </div>
+                                        data-category="投资"><i
+                                            class="fas fa-chart-line text-xl text-blue-500 mb-2"></i><span
+                                            class="text-sm">投资</span></div>
                                     <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                        data-category="兼职">
-                                        <i class="fas fa-briefcase text-xl text-purple-500 mb-2"></i>
-                                        <span class="text-sm">兼职</span>
-                                    </div>
+                                        data-category="兼职"><i
+                                            class="fas fa-briefcase text-xl text-purple-500 mb-2"></i><span
+                                            class="text-sm">兼职</span></div>
+                                    <!-- 补回丢失的4个 -->
                                     <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                        data-category="礼金">
-                                        <i class="fas fa-heart text-xl text-pink-500 mb-2"></i>
-                                        <span class="text-sm">礼金</span>
-                                    </div>
+                                        data-category="礼金"><i class="fas fa-heart text-xl text-pink-500 mb-2"></i><span
+                                            class="text-sm">礼金</span></div>
                                     <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                        data-category="退款">
-                                        <i class="fas fa-sync-alt text-xl text-amber-500 mb-2"></i>
-                                        <span class="text-sm">退款</span>
-                                    </div>
+                                        data-category="退款"><i
+                                            class="fas fa-sync-alt text-xl text-amber-500 mb-2"></i><span
+                                            class="text-sm">退款</span></div>
                                     <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                        data-category="利息">
-                                        <i class="fas fa-percentage text-xl text-indigo-500 mb-2"></i>
-                                        <span class="text-sm">利息</span>
-                                    </div>
+                                        data-category="利息"><i
+                                            class="fas fa-percentage text-xl text-indigo-500 mb-2"></i><span
+                                            class="text-sm">利息</span></div>
                                     <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                        data-category="其他">
-                                        <i class="fas fa-ellipsis-h text-xl text-gray-500 mb-2"></i>
-                                        <span class="text-sm">其他</span>
-                                    </div>
+                                        data-category="其他"><i
+                                            class="fas fa-ellipsis-h text-xl text-gray-500 mb-2"></i><span
+                                            class="text-sm">其他</span></div>
                                 </div>
                             </div>
 
-                            <!-- 快捷记账按钮 -->
+                            <!-- 快捷记账 (动态容器) -->
                             <div class="mb-6">
                                 <h4 class="text-gray-700 font-medium mb-3">快捷记账</h4>
                                 <div id="quickInputOptions" class="flex flex-wrap gap-3">
-                                    <button
-                                        class="quick-entry-btn px-4 py-2 bg-gray-100 rounded-full text-gray-700 text-sm transition-colors hover:bg-gray-200"
-                                        data-category="餐饮" data-amount="20">
-                                        午餐 20元
-                                    </button>
-                                    <button
-                                        class="quick-entry-btn px-4 py-2 bg-gray-100 rounded-full text-gray-700 text-sm transition-colors hover:bg-gray-200"
-                                        data-category="交通" data-amount="10">
-                                        地铁 10元
-                                    </button>
-                                    <button
-                                        class="quick-entry-btn px-4 py-2 bg-gray-100 rounded-full text-gray-700 text-sm transition-colors hover:bg-gray-200"
-                                        data-category="购物" data-amount="50">
-                                        日用品 50元
-                                    </button>
-                                    <button
-                                        class="quick-entry-btn px-4 py-2 bg-gray-100 rounded-full text-gray-700 text-sm transition-colors hover:bg-gray-200"
-                                        data-category="餐饮" data-amount="40">
-                                        晚餐 40元
-                                    </button>
+                                    <!-- JS 会在这里填充按钮 -->
                                 </div>
                             </div>
 
-                            <!-- 隐藏的分类输入框 -->
-                            <input type="hidden" id="billCategory" name="category" value="餐饮">
-
-                            <!-- 表单输入 -->
+                            <!-- 输入表单 -->
                             <div class="space-y-4">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-gray-700 text-sm font-medium mb-2" for="billAmount">
-                                            金额
-                                        </label>
+                                        <label class="block text-gray-700 text-sm font-medium mb-2">金额</label>
                                         <input
                                             class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                             id="billAmount" type="number" step="0.01" placeholder="0.00">
                                     </div>
                                     <div>
-                                        <label class="block text-gray-700 text-sm font-medium mb-2" for="billDate">
-                                            日期
-                                        </label>
+                                        <label class="block text-gray-700 text-sm font-medium mb-2">日期</label>
                                         <input
                                             class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                             id="billDate" type="date">
                                     </div>
                                 </div>
-
                                 <div>
-                                    <label class="block text-gray-700 text-sm font-medium mb-2" for="accountSelect">
-                                        账户
-                                    </label>
+                                    <label class="block text-gray-700 text-sm font-medium mb-2">账户</label>
                                     <select
                                         class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         id="accountSelect">
                                         <option value="">请选择账户</option>
                                     </select>
                                 </div>
-
                                 <div>
-                                    <label class="block text-gray-700 text-sm font-medium mb-2" for="billDescription">
-                                        备注
-                                    </label>
+                                    <label class="block text-gray-700 text-sm font-medium mb-2">备注</label>
                                     <input
                                         class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         id="billDescription" type="text" placeholder="添加备注...">
                                 </div>
-
                                 <button id="saveBillButton"
                                     class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
-                                    <i class="fas fa-save mr-2"></i>保存账单
+                                    <i class="fas fa-save mr-2"></i> 保存账单
                                 </button>
                             </div>
                         </div>
@@ -388,754 +282,312 @@
                             <div class="flex justify-between items-center mb-6">
                                 <h3 class="text-xl font-bold text-gray-800">最近账单</h3>
                                 <button id="viewAllBillsBtn"
-                                    class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
-                                    查看全部
-                                </button>
+                                    class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">查看全部</button>
                             </div>
-
-                            <div id="billList" class="space-y-3 max-h-80 overflow-y-auto">
-                                <!-- 账单列表将通过JavaScript动态生成 -->
-                            </div>
+                            <div id="billList" class="space-y-3 max-h-80 overflow-y-auto"></div>
                         </div>
                     </div>
 
-                    <!-- 右侧：数据统计和账户管理 -->
+                    <!-- 右侧 -->
                     <div class="space-y-6">
-                        <!-- 账户管理 -->
                         <div class="bg-white p-6 rounded-lg shadow-md">
                             <div class="flex justify-between items-center mb-4">
                                 <h3 class="text-lg font-bold text-gray-800">我的账户</h3>
-                                <button onclick="openAccountModal()"
-                                    class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
-                                    <i class="fas fa-plus-circle mr-1"></i>添加账户
-                                </button>
+                                <button id="addAccountButton" onclick="window.openAccountModal()"
+                                    class="text-indigo-600 hover:text-indigo-700 text-sm font-medium"><i
+                                        class="fas fa-plus-circle mr-1"></i>添加账户</button>
                             </div>
-
-                            <div id="accountList" class="space-y-3 max-h-80 overflow-y-auto">
-                                <!-- 账户列表将通过JavaScript动态生成 -->
-                            </div>
+                            <div id="accountList" class="space-y-3 max-h-80 overflow-y-auto"></div>
                         </div>
-
-                        <!-- 分类统计图表 -->
                         <div class="bg-white p-6 rounded-lg shadow-md">
                             <h3 class="text-lg font-bold text-gray-800 mb-4">支出分类统计</h3>
-                            <div class="h-64">
-                                <canvas id="categoryChart"></canvas>
-                            </div>
+                            <div class="h-64"><canvas id="categoryChart"></canvas></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 2. 新增一个 div，ID叫 view-dynamic，默认隐藏。用来放其他页面的内容 -->
-            <div id="view-dynamic" class="hidden">
-                <!-- 这里的内容会由 JS 动态生成 -->
-            </div>
-
+            <!-- 2. 动态内容容器 -->
+            <div id="view-dynamic" class="hidden"></div>
         </div>
     </div>
 
-    <!-- 引入数据库API -->
-    <script src="database.js"></script>
-    <!-- 引入主脚本 -->
-    <script type="module" src="app.js"></script>
-
-    <!-- 统一风格的 Footer -->
+    <!-- 底部 Footer -->
     <footer class="w-full py-6 text-white text-center bg-transparent mt-auto">
         <div class="text-sm opacity-80">
-            <div class="mb-2">
-                Developed by the <a href="#" class="hover:text-gray-200 transition-colors">Cloud Ledger Dev Team</a>
-            </div>
+            <div class="mb-2">Developed by the <a href="#" class="hover:text-gray-200 transition-colors">Cloud Ledger
+                    Dev Team</a></div>
             © 2025 云记账. All rights reserved.
         </div>
     </footer>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- ============== 模态框区域 ============== -->
+
+    <!-- 1. 筛选弹窗 -->
+    <div id="filterModal"
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
+        <div id="filterModalContent"
+            class="bg-white rounded-xl p-6 w-full max-w-sm transform scale-90 opacity-0 transition-all">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">筛选账单</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-600 mb-2">收支类型</label>
+                    <div class="flex space-x-3">
+                        <label class="flex items-center space-x-2"><input type="radio" name="filterType" value=""
+                                checked><span>全部</span></label>
+                        <label class="flex items-center space-x-2"><input type="radio" name="filterType"
+                                value="expense"><span>支出</span></label>
+                        <label class="flex items-center space-x-2"><input type="radio" name="filterType"
+                                value="income"><span>收入</span></label>
+                    </div>
+                </div>
+                <div><label class="block text-sm text-gray-600 mb-2">开始日期</label><input type="date" id="filterStartDate"
+                        class="w-full border rounded-lg px-3 py-2"></div>
+                <div><label class="block text-sm text-gray-600 mb-2">结束日期</label><input type="date" id="filterEndDate"
+                        class="w-full border rounded-lg px-3 py-2"></div>
+            </div>
+            <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
+                <button id="resetFilterBtn" class="px-4 py-2 text-gray-500">重置</button>
+                <button id="applyFilterBtn" class="px-6 py-2 bg-primary text-white rounded-lg">应用</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 编辑账单弹窗 -->
+    <div id="editBillModal"
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
+        <div id="editBillContent"
+            class="bg-white rounded-xl p-6 w-full max-w-sm transform scale-90 opacity-0 transition-all">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">编辑账单</h3>
+            <input type="hidden" id="editBillId">
+            <div class="space-y-4">
+                <div><label class="block text-sm mb-1">金额</label><input type="number" id="editBillAmount"
+                        class="w-full border rounded p-2"></div>
+                <div><label class="block text-sm mb-1">分类</label><input type="text" id="editBillCategory"
+                        class="w-full border rounded p-2"></div>
+                <div><label class="block text-sm mb-1">日期</label><input type="date" id="editBillDate"
+                        class="w-full border rounded p-2"></div>
+                <div><label class="block text-sm mb-1">备注</label><input type="text" id="editBillDesc"
+                        class="w-full border rounded p-2"></div>
+            </div>
+            <div class="flex justify-end space-x-3 mt-6">
+                <button onclick="window.closeEditBillModal()" class="px-4 py-2 text-gray-500">取消</button>
+                <button onclick="window.submitEditBill()" class="px-6 py-2 bg-primary text-white rounded">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 账户弹窗 (Add/Edit) 【关键位置】 -->
+    <div id="accountModal"
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
+        <div id="accModalContent"
+            class="bg-white rounded-xl p-6 w-full max-w-sm transform scale-90 opacity-0 transition-all">
+            <h3 id="accModalTitle" class="text-lg font-bold mb-4 text-gray-800">添加账户</h3>
+            <input type="hidden" id="accModalId">
+            <div class="space-y-4">
+                <div><label class="block text-sm text-gray-600 mb-1">账户名称</label><input type="text" id="accModalName"
+                        class="w-full border rounded-lg p-2"></div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">账户类型</label>
+                    <select id="accModalType" class="w-full border rounded-lg p-2">
+                        <option value="现金">现金</option>
+                        <option value="银行卡">银行卡</option>
+                        <option value="支付宝">支付宝</option>
+                        <option value="微信钱包">微信钱包</option>
+                    </select>
+                </div>
+                <div><label class="block text-sm text-gray-600 mb-1">余额</label><input type="number" id="accModalBalance"
+                        step="0.01" class="w-full border rounded-lg p-2"></div>
+            </div>
+            <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
+                <button onclick="window.closeAccountModal()" class="px-4 py-2 text-gray-500">取消</button>
+                <button onclick="window.handleAccountSubmit()"
+                    class="px-6 py-2 bg-primary text-white rounded-lg">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="database.js"></script>
+    <script type="module" src="app.js"></script>
+
     <script>
         window.stopAutoRefresh = true;
-
-        // 账户管理相关函数
-        function openAccountModal(id, name, type, balance) {
-            // 填充表单数据
-            document.getElementById('accModalId').value = id || '';
-            document.getElementById('accModalName').value = name || '';
-            document.getElementById('accModalType').value = type || '现金';
-            document.getElementById('accModalBalance').value = balance || '';
-
-            // 修改标题
-            const title = document.getElementById('accModalTitle');
-            if (title) title.textContent = id ? '编辑账户' : '添加账户';
-
-            // 显示弹窗
-            const modal = document.getElementById('accountModal');
-            const content = document.getElementById('accModalContent');
-            if (modal && content) {
-                modal.classList.remove('hidden');
-                setTimeout(() => {
-                    modal.classList.remove('opacity-0');
-                    content.classList.remove('scale-90', 'opacity-0');
-                    content.classList.add('scale-100', 'opacity-100');
-                }, 10);
-            }
-        }
-
-        function closeAccountModal() {
-            const modal = document.getElementById('accountModal');
-            const content = document.getElementById('accModalContent');
-            if (modal && content) {
-                content.classList.remove('scale-100', 'opacity-100');
-                content.classList.add('scale-90', 'opacity-0');
-                modal.classList.add('opacity-0');
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                }, 200);
-            }
-        }
-
-        function handleAccountSubmit() {
-            const id = document.getElementById('accModalId').value;
-            const name = document.getElementById('accModalName').value;
-            const type = document.getElementById('accModalType').value;
-            const balance = document.getElementById('accModalBalance').value;
-
-            // 简单验证
-            if (!name || !balance) {
-                alert('请填写完整信息');
-                return;
-            }
-
-            // 调用 API 保存账户
-            if (window.db) {
-                const accountData = {
-                    name: name,
-                    type: type,
-                    balance: parseFloat(balance)
-                };
-
-                // 根据是否有 ID 来决定是新增还是更新
-                const promise = id ?
-                    window.db.updateAccount({ ...accountData, account_id: id }) :
-                    window.db.addAccount(accountData);
-
-                promise.then(result => {
-                    if (result.success) {
-                        // 保存成功，重新加载账户列表
-                        const currentUser = localStorage.getItem('user_id');
-                        window.db.getAccounts(currentUser).then(accounts => {
-                            const moduleName = '账户管理';
-                            const dynamicView = document.getElementById('view-dynamic');
-                            if (dynamicView) {
-                                dynamicView.innerHTML = `<h1 class="text-2xl font-bold mb-6 text-white">${moduleName}</h1>`;
-                                const container = document.createElement('div');
-                                container.className = 'bg-white rounded-lg shadow-md p-6 min-h-[400px]';
-                                updateContentArea(moduleName, accounts);
-                            }
-                        });
-                        closeAccountModal();
-                    } else {
-                        alert('保存失败: ' + result.error);
-                    }
-                }).catch(err => {
-                    alert('网络错误: ' + err.message);
-                });
-            }
-        }
-
-        // 删除账户函数
-        function deleteAccount(accountId) {
-            if (confirm('确定要删除这个账户吗？')) {
-                if (window.db) {
-                    window.db.deleteAccount({ account_id: accountId }).then(result => {
-                        if (result.success) {
-                            // 删除成功，重新加载账户列表
-                            const currentUser = localStorage.getItem('user_id');
-                            window.db.getAccounts(currentUser).then(accounts => {
-                                const moduleName = '账户管理';
-                                const dynamicView = document.getElementById('view-dynamic');
-                                if (dynamicView) {
-                                    dynamicView.innerHTML = `<h1 class="text-2xl font-bold mb-6 text-white">${moduleName}</h1>`;
-                                    const container = document.createElement('div');
-                                    container.className = 'bg-white rounded-lg shadow-md p-6 min-h-[400px]';
-                                    updateContentArea(moduleName, accounts);
-                                }
-                            });
-                        } else {
-                            alert('删除失败: ' + result.error);
-                        }
-                    }).catch(err => {
-                        alert('网络错误: ' + err.message);
-                    });
-                }
-            }
-        }
-
-        // 编辑账单相关函数
-        function openEditBillModal(billId, amount, category, desc, date, type) {
-            // 填充表单数据
-            document.getElementById('editBillId').value = billId;
-            document.getElementById('editBillAmount').value = amount;
-            document.getElementById('editBillCategory').value = category;
-            document.getElementById('editBillDesc').value = desc || '';
-            document.getElementById('editBillDate').value = date;
-
-            // 显示弹窗
-            const modal = document.getElementById('editBillModal');
-            const content = document.getElementById('editBillContent');
-            if (modal && content) {
-                modal.classList.remove('hidden');
-                setTimeout(() => {
-                    modal.classList.remove('opacity-0');
-                    content.classList.remove('scale-90', 'opacity-0');
-                    content.classList.add('scale-100', 'opacity-100');
-                }, 10);
-            }
-        }
-
-        function closeEditBillModal() {
-            const modal = document.getElementById('editBillModal');
-            const content = document.getElementById('editBillContent');
-            if (modal && content) {
-                content.classList.remove('scale-100', 'opacity-100');
-                content.classList.add('scale-90', 'opacity-0');
-                modal.classList.add('opacity-0');
-                setTimeout(() => modal.classList.add('hidden'), 200);
-            }
-        }
-
-        function submitEditBill() {
-            const billId = document.getElementById('editBillId').value;
-            const amount = document.getElementById('editBillAmount').value;
-            const category = document.getElementById('editBillCategory').value;
-            const desc = document.getElementById('editBillDesc').value;
-            const date = document.getElementById('editBillDate').value;
-
-            // 简单验证
-            if (!amount || !category || !date) {
-                alert('请填写完整信息');
-                return;
-            }
-
-            // 调用 API 更新账单
-            if (window.db) {
-                window.db.updateBill({
-                    bill_id: billId,
-                    amount: parseFloat(amount),
-                    category: category,
-                    description: desc,
-                    date: date
-                }).then(result => {
-                    if (result.success) {
-                        // 更新成功，重新加载账单列表
-                        const currentUser = localStorage.getItem('user_id');
-                        window.db.getBills({ user_id: currentUser }).then(bills => {
-                            const moduleName = '账单管理';
-                            const dynamicView = document.getElementById('view-dynamic');
-                            if (dynamicView) {
-                                dynamicView.innerHTML = `<h1 class="text-2xl font-bold mb-6 text-white">${moduleName}</h1>`;
-                                const container = document.createElement('div');
-                                container.className = 'bg-white rounded-lg shadow-md p-6 min-h-[400px]';
-                                updateContentArea(moduleName, bills);
-                            }
-                        });
-                        closeEditBillModal();
-                    } else {
-                        alert('更新失败: ' + result.error);
-                    }
-                }).catch(err => {
-                    alert('网络错误: ' + err.message);
-                });
-            }
-        }
-
-        // 删除账单函数
-        function deleteBill(billId) {
-            if (confirm('确定要删除这条账单吗？')) {
-                if (window.db) {
-                    window.db.deleteBill({ bill_id: billId }).then(result => {
-                        if (result.success) {
-                            // 删除成功，重新加载账单列表
-                            const currentUser = localStorage.getItem('user_id');
-                            window.db.getBills({ user_id: currentUser }).then(bills => {
-                                const moduleName = '账单管理';
-                                const dynamicView = document.getElementById('view-dynamic');
-                                if (dynamicView) {
-                                    dynamicView.innerHTML = `<h1 class="text-2xl font-bold mb-6 text-white">${moduleName}</h1>`;
-                                    const container = document.createElement('div');
-                                    container.className = 'bg-white rounded-lg shadow-md p-6 min-h-[400px]';
-                                    updateContentArea(moduleName, bills);
-                                }
-                            });
-                        } else {
-                            alert('删除失败: ' + result.error);
-                        }
-                    }).catch(err => {
-                        alert('网络错误: ' + err.message);
-                    });
-                }
-            }
-        }
-
-        // 暴露函数到全局
-        window.openEditBillModal = openEditBillModal;
-        window.closeEditBillModal = closeEditBillModal;
-        window.submitEditBill = submitEditBill;
-        window.deleteBill = deleteBill;
-        window.openAccountModal = openAccountModal;
-        window.closeAccountModal = closeAccountModal;
-        window.handleAccountSubmit = handleAccountSubmit;
-        window.deleteAccount = deleteAccount;
-
         document.addEventListener('DOMContentLoaded', function () {
-            // 1. 绑定导航点击事件
+            // 导航点击
             const navItems = document.querySelectorAll('.nav-item-hover, .nav-item-active');
             navItems.forEach(item => {
                 item.addEventListener('click', function (e) {
                     e.preventDefault();
-                    // 样式切换
-                    navItems.forEach(n => {
-                        n.classList.remove('nav-item-active');
-                        n.classList.add('nav-item-hover');
-                    });
+                    navItems.forEach(n => { n.classList.remove('nav-item-active'); n.classList.add('nav-item-hover'); });
                     this.classList.remove('nav-item-hover');
                     this.classList.add('nav-item-active');
-
-                    // 获取模块名称 (去除空格)
-                    const navText = this.querySelector('span').textContent.trim();
-                    switchContent(navText);
+                    switchContent(this.querySelector('span').textContent.trim());
                 });
             });
 
-            // 【新增】绑定“查看全部”跳转
-            const viewAllBtn = document.getElementById('viewAllBillsBtn');
-            if (viewAllBtn) {
-                viewAllBtn.addEventListener('click', () => {
-                    // 模拟点击左侧导航
-                    const nav = Array.from(document.querySelectorAll('nav a')).find(a => a.textContent.includes('账单管理'));
-                    if (nav) nav.click();
-                });
-            }
-
-            // 【新增】绑定“添加账户”跳转
-            // 注意：如果是要在当前页弹窗，就调用 showAccountEditModal
-            // 如果是跳转到管理页，就模拟点击导航
-            const addAccBtn = document.getElementById('addAccountButton');
-            if (addAccBtn) {
-                // 先移除旧的监听器（如果有的话），或者直接覆盖
-                // 这里我们让它跳转到“账户管理”页面，因为在那个页面添加更合理
-                addAccBtn.onclick = (e) => {
-                    e.preventDefault();
-                    const nav = Array.from(document.querySelectorAll('nav a')).find(a => a.textContent.includes('账户管理'));
-                    if (nav) nav.click();
-
-                    // 可选：跳转后自动弹出添加框
-                    // setTimeout(() => { if(window.showAccountEditModal) window.showAccountEditModal(); }, 500);
-                };
-            }
-
-            // 2. 核心渲染函数
-            function updateContentArea(moduleName, data) {
-                const dynamicView = document.getElementById('view-dynamic');
-                if (!dynamicView) return;
-
-                dynamicView.innerHTML = `<h1 class="text-2xl font-bold mb-6 text-white">${moduleName}</h1>`;
-                const container = document.createElement('div');
-                container.className = 'bg-white rounded-lg shadow-md p-6 min-h-[400px]';
-
-                // 【修复】处理数据为空的情况
-                if (moduleName === '账单管理') {
-                    const bills = Array.isArray(data) ? data : [];
-                    let html = '<h2 class="text-xl font-bold mb-4 border-b pb-2">账单列表</h2> ';
-
-                    if (bills.length === 0) {
-                        html += '<div class="text-center text-gray-400 py-10">暂无账单记录</div> ';
-                    } else {
-                        html += '<div class="space-y-3"> ';
-                        bills.forEach(bill => {
-                            const isExpense = bill.type === 'expense';
-                            const color = isExpense ? 'text-red-500' : 'text-green-500';
-                            const sign = isExpense ? '-' : '+';
-
-                            // 构造单行数据
-                            html += ` 
-                                <div class="flex justify-between items-center p-4 bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-all"> 
-                                    <div class="flex-1"> 
-                                        <div class="flex items-center gap-2"> 
-                                            <span class="font-bold text-gray-800">${bill.category || '未分类'}</span> 
-                                            <span class="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-500">${bill.type === 'expense' ? '支出' : '收入'}</span> 
-                                        </div> 
-                                        <div class="text-xs text-gray-500 mt-1"> 
-                                            <i class="far fa-calendar-alt mr-1"></i> ${bill.date} 
-                                            <span class="ml-2 border-l pl-2">${bill.description || ''}</span> 
-                                        </div> 
-                                    </div> 
-                                    
-                                    <div class="text-right flex items-center gap-4"> 
-                                        <div class="text-lg font-bold ${color} w-24"> 
-                                            ${sign}¥${parseFloat(bill.amount).toFixed(2)} 
-                                        </div> 
-                                        
-                                        <div class="flex space-x-1"> 
-                                            <!-- 编辑按钮 --> 
-                                            <button onclick="openEditBillModal('${bill.bill_id}', ${bill.amount}, '${bill.category}', '${bill.description || ''}', '${bill.date}', '${bill.type}')"  
-                                                class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors" title="编辑"> 
-                                                <i class="fas fa-edit"></i> 
-                                            </button> 
-                                            
-                                            <!-- 删除按钮 --> 
-                                            <button onclick="deleteBill('${bill.bill_id}')"  
-                                                class="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors" title="删除"> 
-                                                <i class="fas fa-trash-alt"></i> 
-                                            </button> 
-                                        </div> 
-                                    </div> 
-                                </div> `;
-                        });
-                        html += '</div> ';
-                    }
-                    container.innerHTML = html;
-                } else if (moduleName === '数据分析') {
-                    // 【核心修改】数据分析页面的 HTML 结构
-                    let html = `
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
-                            <!-- 左侧：图表区域 -->
-                            <div class="bg-gray-50 rounded-xl p-4 flex flex-col items-center justify-center min-h-[300px]">
-                                <h3 class="text-lg font-bold text-gray-700 mb-4">支出分类占比</h3>
-                                <div class="w-full h-64 relative">
-                                    <canvas id="analysisChart"></canvas>
-                                </div>
-                            </div>
-
-                            <!-- 右侧：排行榜 -->
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-700 mb-4">支出排行榜</h3>
-                                <div id="analysisRanking" class="space-y-3 overflow-y-auto max-h-[320px] pr-2">
-                                    <!-- 排行榜数据将由 JS 插入 -->
-                                    <div class="text-center text-gray-400 py-10">数据计算中...</div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    container.innerHTML = html;
-
-                    // 【关键】页面渲染后，调用 stat.js 的函数来画图
-                    // 我们稍微延迟一下，确保 canvas 元素已经存在于 DOM 中
-                    setTimeout(() => {
-                        // 假设 data 是我们从 API 获取到的账单列表（在 switchContent 里传入）
-                        // 如果 data 是空对象，我们需要重新获取一次
-                        if (!data.length && window.db) {
-                            const userId = localStorage.getItem('user_id');
-                            window.db.getBills({ user_id: userId }).then(bills => {
-                                if (window.renderAnalysisPage) window.renderAnalysisPage(bills);
-                            });
-                        } else {
-                            if (window.renderAnalysisPage) window.renderAnalysisPage(data);
-                        }
-                    }, 100);
-
-                } else if (moduleName === '账户管理') {
-                    const accounts = Array.isArray(data) ? data : [];
-                    let html = `
-                        <div class="flex justify-between items-center mb-4 border-b pb-2">
-                            <h2 class="text-xl font-bold">账户列表</h2>
-                            <button onclick="openAccountModal()" class="bg-primary text-white px-3 py-1.5 rounded-lg text-sm flex items-center hover:bg-blue-600 transition-colors">
-                                <i class="fas fa-plus mr-1"></i> 新建账户
-                            </button>
-                        </div>
-                    `;
-
-                    if (accounts.length === 0) {
-                        html += '<div class="text-center text-gray-400 py-10">暂无账户，快去添加一个吧</div>';
-                    } else {
-                        html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
-                        accounts.forEach(acc => {
-                            // 根据类型选择图标颜色
-                            let iconColor = 'bg-blue-100 text-blue-600';
-                            if (acc.type.includes('支付宝')) iconColor = 'bg-blue-500 text-white';
-                            if (acc.type.includes('微信')) iconColor = 'bg-green-500 text-white';
-                            if (acc.type.includes('现金')) iconColor = 'bg-yellow-100 text-yellow-600';
-
-                            html += `
-                                <div class="p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <div class="flex items-center">
-                                            <div class="w-10 h-10 rounded-full ${iconColor} flex items-center justify-center mr-3 shadow-sm">
-                                                <i class="fas fa-wallet"></i>
-                                            </div>
-                                            <div>
-                                                <div class="font-bold text-gray-800 text-lg">${acc.name}</div>
-                                                <div class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full inline-block">${acc.type}</div>
-                                            </div>
-                                        </div>
-                                        <div class="text-xl font-bold text-gray-700">¥${parseFloat(acc.balance).toFixed(2)}</div>
-                                    </div>
-                                    
-                                    <!-- 操作按钮 (hover显示) -->
-                                    <div class="flex justify-end space-x-2 mt-4 pt-3 border-t border-dashed border-gray-100">
-                                        <button onclick="openAccountModal('${acc.account_id}', '${acc.name}', '${acc.type}', ${acc.balance})"
-                                            class="text-blue-500 hover:bg-blue-50 px-3 py-1 rounded text-sm transition-colors">
-                                            <i class="fas fa-edit mr-1"></i>编辑
-                                        </button>
-                                        <button onclick="deleteAccount('${acc.account_id}')"
-                                            class="text-red-500 hover:bg-red-50 px-3 py-1 rounded text-sm transition-colors">
-                                            <i class="fas fa-trash-alt mr-1"></i>删除
-                                        </button>
-                                    </div>
-                                </div>`;
-                        });
-                        html += '</div>';
-                    }
-                    container.innerHTML = html;
-                } else {
-                    container.innerHTML = '<div class="text-center py-10 text-gray-500">此功能正在开发中...</div>';
-                }
-
-                dynamicView.appendChild(container);
-            }
-
-            // 3. 切换逻辑
-            function switchContent(moduleName) {
-                const viewHome = document.getElementById('view-home');
-                const viewDynamic = document.getElementById('view-dynamic');
-                const currentUser = localStorage.getItem('user_id');
-
-                if (moduleName === '记账录入') {
-                    viewHome.classList.remove('hidden');
-                    viewDynamic.classList.add('hidden');
-                    // 刷新主页数据
-                    if (window.loadBills) window.loadBills();
-                    if (window.loadAccounts) window.loadAccounts();
-                    return;
-                }
-
-                // 切换到动态页
-                viewHome.classList.add('hidden');
-                viewDynamic.classList.remove('hidden');
-                viewDynamic.innerHTML = '<div class="flex justify-center items-center h-64"><i class="fas fa-spinner fa-spin text-white text-4xl"></i></div>';
-
-                // 调用 API 获取数据
-                if (moduleName === '账单管理') {
-                    window.db.getBills({ user_id: currentUser })
-                        .then(data => updateContentArea(moduleName, data))
-                        .catch(err => {
-                            console.error(err);
-                            updateContentArea(moduleName, []); // 出错也显示空列表
-                        });
-                } else if (moduleName === '数据分析') {
-                    // 调用 getBills 获取所有账单数据，传给 updateContentArea
-                    window.db.getBills({ user_id: currentUser })
-                        .then(data => updateContentArea(moduleName, data))
-                        .catch(err => {
-                            console.error(err);
-                            updateContentArea(moduleName, []);
-                        });
-                } else if (moduleName === '账户管理') {
-                    window.db.getAccounts(currentUser)
-                        .then(data => updateContentArea(moduleName, data))
-                        .catch(err => {
-                            console.error(err);
-                            updateContentArea(moduleName, []);
-                        });
-                } else {
-                    updateContentArea(moduleName, {});
-                }
-            }
-            // 【新增】筛选功能逻辑
+            // 筛选逻辑
             const filterBtn = document.getElementById('filterButton');
             const filterModal = document.getElementById('filterModal');
             const filterContent = document.getElementById('filterModalContent');
             const applyBtn = document.getElementById('applyFilterBtn');
             const resetBtn = document.getElementById('resetFilterBtn');
 
-            // 打开弹窗
             if (filterBtn) {
                 filterBtn.addEventListener('click', () => {
                     filterModal.classList.remove('hidden');
-                    setTimeout(() => {
-                        filterModal.classList.remove('opacity-0');
-                        filterContent.classList.remove('scale-90', 'opacity-0');
-                        filterContent.classList.add('scale-100', 'opacity-100');
-                    }, 10);
+                    setTimeout(() => { filterModal.classList.remove('opacity-0'); filterContent.classList.remove('scale-90', 'opacity-0'); filterContent.classList.add('scale-100', 'opacity-100'); }, 10);
                 });
             }
-
-            // 关闭弹窗函数
-            function closeFilterModal() {
-                filterContent.classList.remove('scale-100', 'opacity-100');
-                filterContent.classList.add('scale-90', 'opacity-0');
-                filterModal.classList.add('opacity-0');
+            if (filterModal) {
+                filterModal.addEventListener('click', (e) => { if (e.target === filterModal) closeFilter(); });
+            }
+            function closeFilter() {
+                filterContent.classList.add('scale-90', 'opacity-0'); filterModal.classList.add('opacity-0');
                 setTimeout(() => filterModal.classList.add('hidden'), 200);
             }
-
-            // 点击背景关闭
-            if (filterModal) {
-                filterModal.addEventListener('click', (e) => {
-                    if (e.target === filterModal) closeFilterModal();
-                });
-            }
-
-            // 应用筛选
             if (applyBtn) {
                 applyBtn.addEventListener('click', () => {
                     const typeRadio = document.querySelector('input[name="filterType"]:checked');
-                    const startDate = document.getElementById('filterStartDate').value;
-                    const endDate = document.getElementById('filterEndDate').value;
-
-                    const filters = {};
-                    if (typeRadio && typeRadio.value) filters.type = typeRadio.value;
-                    if (startDate) filters.startDate = startDate;
-                    if (endDate) filters.endDate = endDate;
-
-                    // 调用 bill.js 的加载函数
-                    if (window.loadBills) {
-                        window.loadBills(filters);
-                    }
-                    closeFilterModal();
+                    const start = document.getElementById('filterStartDate').value;
+                    const end = document.getElementById('filterEndDate').value;
+                    if (window.loadBills) window.loadBills({ type: typeRadio?.value, startDate: start, endDate: end });
+                    closeFilter();
+                });
+            }
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                    if (window.loadBills) window.loadBills({});
+                    closeFilter();
                 });
             }
 
-            // 重置筛选
-            if (resetBtn) {
-                resetBtn.addEventListener('click', () => {
-                    // 清空输入
-                    const radios = document.getElementsByName('filterType');
-                    radios.forEach(r => r.checked = r.value === "");
-                    document.getElementById('filterStartDate').value = '';
-                    document.getElementById('filterEndDate').value = '';
-
-                    // 重新加载全部
-                    if (window.loadBills) window.loadBills({});
-                    closeFilterModal();
+            // 查看全部快捷跳转
+            const viewAllBtn = document.getElementById('viewAllBillsBtn');
+            if (viewAllBtn) {
+                viewAllBtn.addEventListener('click', () => {
+                    const nav = Array.from(document.querySelectorAll('nav a')).find(a => a.textContent.includes('账单管理'));
+                    if (nav) nav.click();
                 });
+            }
+
+            // 渲染动态内容
+            function updateContentArea(moduleName, data) {
+                const dynamicView = document.getElementById('view-dynamic');
+                if (!dynamicView) return;
+                dynamicView.innerHTML = `<h1 class="text-2xl font-bold mb-6 text-white">${moduleName}</h1>`;
+                const container = document.createElement('div');
+                container.className = 'bg-white rounded-lg shadow-md p-6 min-h-[400px]';
+
+                if (moduleName === '账单管理') {
+                    const bills = Array.isArray(data) ? data : [];
+                    let html = '<h2 class="text-xl font-bold mb-4 border-b pb-2">账单列表</h2>';
+                    if (bills.length === 0) {
+                        html += '<div class="text-center text-gray-400 py-10">暂无账单记录</div>';
+                    } else {
+                        html += '<div class="space-y-3">';
+                        bills.forEach(bill => {
+                            const isExpense = bill.type === 'expense';
+                            const color = isExpense ? 'text-red-500' : 'text-green-500';
+                            html += `
+                                <div class="flex justify-between items-center p-4 bg-white border border-gray-100 rounded-lg shadow-sm">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2"><span class="font-bold">${bill.category || '未分类'}</span><span class="text-xs px-2 py-0.5 rounded bg-gray-100">${isExpense ? '支出' : '收入'}</span></div>
+                                        <div class="text-xs text-gray-500 mt-1">${bill.date} ${bill.description || ''}</div>
+                                    </div>
+                                    <div class="text-right flex items-center gap-4">
+                                        <div class="text-lg font-bold ${color}">${isExpense ? '-' : '+'}¥${parseFloat(bill.amount).toFixed(2)}</div>
+                                        <div class="flex space-x-1">
+                                            <button onclick="window.openEditBillModal('${bill.bill_id}', ${bill.amount}, '${bill.category}', '${bill.description}', '${bill.date}', '${bill.type}')" class="text-blue-500 p-2"><i class="fas fa-edit"></i></button>
+                                            <button onclick="window.deleteBill('${bill.bill_id}')" class="text-red-500 p-2"><i class="fas fa-trash-alt"></i></button>
+                                        </div>
+                                    </div>
+                                </div>`;
+                        });
+                        html += '</div>';
+                    }
+                    container.innerHTML = html;
+
+                } else if (moduleName === '账户管理') {
+                    const accounts = Array.isArray(data) ? data : [];
+                    let html = `
+                        <div class="flex justify-between items-center mb-4 border-b pb-2">
+                            <h2 class="text-xl font-bold">账户列表</h2>
+                            <button onclick="window.openAccountModal()" class="bg-primary text-white px-3 py-1.5 rounded-lg text-sm flex items-center hover:bg-blue-600">
+                                <i class="fas fa-plus mr-1"></i> 新建账户
+                            </button>
+                        </div>
+                    `;
+                    if (accounts.length === 0) {
+                        html += '<div class="text-center text-gray-400 py-10">暂无账户</div>';
+                    } else {
+                        html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+                        accounts.forEach(acc => {
+                            html += `
+                                <div class="p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all group">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="flex items-center"><div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3"><i class="fas fa-wallet text-blue-600"></i></div>
+                                            <div><div class="font-bold text-gray-800">${acc.name}</div><div class="text-xs text-gray-500">${acc.type}</div></div>
+                                        </div>
+                                        <div class="text-xl font-bold text-gray-700">¥${parseFloat(acc.balance).toFixed(2)}</div>
+                                    </div>
+                                    <div class="flex justify-end space-x-2 mt-4 pt-3 border-t border-dashed border-gray-100">
+                                        <button onclick="window.openAccountModal('${acc.account_id}', '${acc.name}', '${acc.type}', ${acc.balance})" class="text-blue-500 px-3 py-1 text-sm"><i class="fas fa-edit"></i> 编辑</button>
+                                        <button onclick="window.deleteAccount('${acc.account_id}')" class="text-red-500 px-3 py-1 text-sm"><i class="fas fa-trash-alt"></i> 删除</button>
+                                    </div>
+                                </div>`;
+                        });
+                        html += '</div>';
+                    }
+                    container.innerHTML = html;
+
+                } else if (moduleName === '数据分析') {
+                    // 数据分析占位
+                    const html = `
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+                            <div class="bg-gray-50 rounded-xl p-4 flex flex-col items-center justify-center min-h-[300px]">
+                                <h3 class="text-lg font-bold text-gray-700 mb-4">支出分类占比</h3>
+                                <div class="w-full h-64 relative"><canvas id="analysisChart"></canvas></div>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-700 mb-4">支出排行榜</h3>
+                                <div id="analysisRanking" class="space-y-3 overflow-y-auto max-h-[320px] pr-2"></div>
+                            </div>
+                        </div>`;
+                    container.innerHTML = html;
+                    setTimeout(() => {
+                        const uid = localStorage.getItem('user_id');
+                        if (window.db && window.renderAnalysisPage) {
+                            window.db.getBills({ user_id: uid }).then(bills => window.renderAnalysisPage(bills));
+                        }
+                    }, 100);
+                }
+                dynamicView.appendChild(container);
+            }
+
+            function switchContent(moduleName) {
+                const viewHome = document.getElementById('view-home');
+                const viewDynamic = document.getElementById('view-dynamic');
+                if (moduleName === '记账录入') {
+                    viewHome.classList.remove('hidden'); viewDynamic.classList.add('hidden');
+                    if (window.loadBills) window.loadBills();
+                    if (window.loadAccounts) window.loadAccounts();
+                    return;
+                }
+                viewHome.classList.add('hidden'); viewDynamic.classList.remove('hidden');
+                viewDynamic.innerHTML = '<div class="flex justify-center items-center h-64"><i class="fas fa-spinner fa-spin text-white text-4xl"></i></div>';
+
+                const uid = localStorage.getItem('user_id');
+                if (moduleName === '账单管理') {
+                    window.db.getBills({ user_id: uid }).then(d => updateContentArea(moduleName, d));
+                } else if (moduleName === '账户管理') {
+                    window.db.getAccounts(uid).then(d => updateContentArea(moduleName, d));
+                } else if (moduleName === '数据分析') {
+                    updateContentArea(moduleName, []); // 数据分析逻辑在内部处理
+                }
             }
         });
     </script>
-    <!-- 筛选模态框 -->
-    <div id="filterModal"
-        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
-        <div class="bg-white rounded-xl p-6 w-full max-w-sm transform scale-90 opacity-0 transition-all"
-            id="filterModalContent">
-            <h3 class="text-lg font-bold mb-4 text-gray-800">筛选账单</h3>
-
-            <div class="space-y-4">
-                <!-- 收支类型 -->
-                <div>
-                    <label class="block text-sm text-gray-600 mb-2">收支类型</label>
-                    <div class="flex space-x-3">
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="filterType" value="" checked
-                                class="text-primary focus:ring-primary">
-                            <span>全部</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="filterType" value="expense"
-                                class="text-red-500 focus:ring-red-500">
-                            <span>支出</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="filterType" value="income"
-                                class="text-green-500 focus:ring-green-500">
-                            <span>收入</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- 日期范围 -->
-                <div>
-                    <label class="block text-sm text-gray-600 mb-2">开始日期</label>
-                    <input type="date" id="filterStartDate"
-                        class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
-                </div>
-                <div>
-                    <label class="block text-sm text-gray-600 mb-2">结束日期</label>
-                    <input type="date" id="filterEndDate"
-                        class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
-                </div>
-            </div>
-
-            <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
-                <button id="resetFilterBtn"
-                    class="px-4 py-2 text-gray-500 hover:text-gray-700 text-sm font-medium">重置</button>
-                <button id="applyFilterBtn"
-                    class="px-6 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 transition-colors">应用筛选</button>
-            </div>
-        </div>
-        <!-- 编辑账单模态框 -->
-        <div id="editBillModal"
-            class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
-            <div id="editBillContent"
-                class="bg-white rounded-xl p-6 w-full max-w-sm transform scale-90 opacity-0 transition-all">
-                <h3 class="text-lg font-bold mb-4 text-gray-800">编辑账单</h3>
-                <input type="hidden" id="editBillId">
-
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm text-gray-600 mb-1">金额</label>
-                        <input type="number" id="editBillAmount" class="w-full border rounded p-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-600 mb-1">分类</label>
-                        <input type="text" id="editBillCategory" class="w-full border rounded p-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-600 mb-1">日期</label>
-                        <input type="date" id="editBillDate" class="w-full border rounded p-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-600 mb-1">备注</label>
-                        <input type="text" id="editBillDesc" class="w-full border rounded p-2">
-                    </div>
-                </div>
-
-                <div class="flex justify-end space-x-3 mt-6">
-                    <button onclick="closeEditBillModal()"
-                        class="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded">取消</button>
-                    <button onclick="submitEditBill()"
-                        class="px-6 py-2 bg-primary text-white rounded hover:bg-blue-600">保存</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 账户编辑/添加模态框 -->
-        <div id="accountModal"
-            class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
-            <div id="accModalContent"
-                class="bg-white rounded-xl p-6 w-full max-w-sm transform scale-90 opacity-0 transition-all">
-                <h3 id="accModalTitle" class="text-lg font-bold mb-4 text-gray-800">添加账户</h3>
-                <input type="hidden" id="accModalId">
-
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm text-gray-600 mb-1">账户名称</label>
-                        <input type="text" id="accModalName"
-                            class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50"
-                            placeholder="例如：招商银行卡">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-600 mb-1">账户类型</label>
-                        <select id="accModalType" class="w-full border rounded-lg px-3 py-2 bg-white">
-                            <option value="现金">现金</option>
-                            <option value="银行卡">银行卡</option>
-                            <option value="支付宝">支付宝</option>
-                            <option value="微信钱包">微信钱包</option>
-                            <option value="信用卡">信用卡</option>
-                            <option value="投资账户">投资账户</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-600 mb-1">当前余额</label>
-                        <input type="number" id="accModalBalance" step="0.01"
-                            class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50"
-                            placeholder="0.00">
-                    </div>
-                </div>
-
-                <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
-                    <button onclick="closeAccountModal()"
-                        class="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg text-sm">取消</button>
-                    <button onclick="handleAccountSubmit()"
-                        class="px-6 py-2 bg-primary text-white rounded-lg text-sm hover:bg-blue-600">保存</button>
-                </div>
-            </div>
-        </div>
 </body>
 
 </html>

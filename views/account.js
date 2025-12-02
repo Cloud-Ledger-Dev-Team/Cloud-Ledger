@@ -1,15 +1,19 @@
-// views/account.js - 账户管理核心逻辑 (修复版)
+// views/account.js - 账户管理 (强力调试版)
 
 import { showToastModal } from './modal.js';
 
-// --- 1. 基础加载 (直接导出，供 app.js 使用) ---
+// --- 1. 基础加载 ---
 
 export async function loadAccounts() {
     const currentUser = window.db.getCurrentUser();
-    if (!currentUser) return;
+    if (!currentUser) {
+        console.warn("loadAccounts: 未检测到用户登录");
+        return;
+    }
 
     try {
         const accounts = await window.db.getAccounts(currentUser.userId);
+        console.log("加载到的账户列表:", accounts);
         renderDashboardAccountList(accounts);
         populateAccountSelect(accounts);
         return accounts;
@@ -19,7 +23,6 @@ export async function loadAccounts() {
     }
 }
 
-// 内部辅助函数：渲染首页右侧列表
 function renderDashboardAccountList(accounts) {
     const container = document.getElementById('accountList');
     if (!container) return;
@@ -54,13 +57,11 @@ function renderDashboardAccountList(accounts) {
     });
 }
 
-// 内部辅助函数：填充下拉框
 function populateAccountSelect(accounts) {
     const select = document.getElementById('accountSelect');
     if (!select) return;
 
     const currentValue = select.value;
-
     select.innerHTML = '<option value="">请选择账户</option>';
     accounts.forEach(account => {
         const option = document.createElement('option');
@@ -68,24 +69,28 @@ function populateAccountSelect(accounts) {
         option.textContent = `${account.name} (¥${account.balance})`;
         select.appendChild(option);
     });
-
     if (currentValue) select.value = currentValue;
 }
 
-// --- 2. 弹窗与交互逻辑 (挂载到 window 供 HTML onclick 使用) ---
+// --- 2. 弹窗与交互逻辑 ---
 
-// 打开弹窗
 window.openAccountModal = function (id = '', name = '', type = '现金', balance = '') {
     const modal = document.getElementById('accountModal');
-    if (!modal) return;
+    if (!modal) {
+        alert('错误：找不到弹窗组件 #accountModal，请检查 HTML');
+        return;
+    }
 
-    document.getElementById('accModalId').value = id;
-    document.getElementById('accModalName').value = name;
-    document.getElementById('accModalType').value = type;
-    document.getElementById('accModalBalance').value = balance;
+    // 安全获取元素，防止报错
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+
+    setVal('accModalId', id);
+    setVal('accModalName', name);
+    setVal('accModalType', type);
+    setVal('accModalBalance', balance);
 
     const title = document.getElementById('accModalTitle');
-    if (title) title.textContent = id ? '编辑账户' : '添加账户';
+    if (title) title.textContent = id ? '编辑账户' : '新建账户';
 
     modal.classList.remove('hidden');
     setTimeout(() => {
@@ -95,7 +100,6 @@ window.openAccountModal = function (id = '', name = '', type = '现金', balance
     }, 10);
 }
 
-// 关闭弹窗
 window.closeAccountModal = function () {
     const modal = document.getElementById('accountModal');
     const content = document.getElementById('accModalContent');
@@ -106,16 +110,35 @@ window.closeAccountModal = function () {
     setTimeout(() => modal.classList.add('hidden'), 200);
 }
 
-// 提交表单
+// 【核心修复】保存逻辑 (增加详细日志和 Fallback 提示)
 window.handleAccountSubmit = async function () {
-    const id = document.getElementById('accModalId').value;
-    const name = document.getElementById('accModalName').value;
-    const type = document.getElementById('accModalType').value;
-    const balance = document.getElementById('accModalBalance').value;
+    console.log(">>> 触发保存账户逻辑");
 
-    if (!name) { showToastModal('提示', '请输入账户名称'); return; }
+    const nameEl = document.getElementById('accModalName');
+    if (!nameEl) { console.error("找不到账户名称输入框"); return; }
 
+    const name = nameEl.value;
+    const id = document.getElementById('accModalId')?.value;
+    const type = document.getElementById('accModalType')?.value;
+    const balance = document.getElementById('accModalBalance')?.value;
+
+    console.log("表单数据:", { id, name, type, balance });
+
+    if (!name) {
+        alert('请输入账户名称');
+        return;
+    }
+
+    // 检查用户登录状态
     const currentUser = window.db.getCurrentUser();
+    console.log("当前用户信息:", currentUser);
+
+    if (!currentUser || !currentUser.userId) {
+        alert('登录状态已失效，请重新登录！(LocalStorage 中未找到 user_id)');
+        window.location.href = 'login_register.html'; // 强制跳回登录
+        return;
+    }
+
     const data = {
         user_id: currentUser.userId,
         name: name,
@@ -126,53 +149,61 @@ window.handleAccountSubmit = async function () {
     try {
         let result;
         if (id) {
+            console.log("发送更新请求...", data);
             result = await window.db.updateAccount(id, data);
         } else {
+            console.log("发送新建请求...", data);
             result = await window.db.addAccount(data);
         }
 
-        if (result.success) {
-            showToastModal('成功', id ? '账户已更新' : '账户已添加');
-            window.closeAccountModal();
-            loadAccounts(); // 刷新
+        console.log("后端响应:", result);
 
+        if (result.success) {
+            // 成功
+            window.closeAccountModal();
+            loadAccounts(); // 刷新侧边栏
+
+            // 刷新列表页
             const activeNav = document.querySelector('.nav-item-active');
             if (activeNav && activeNav.textContent.includes('账户管理')) {
-                activeNav.click(); // 重新触发页面加载以更新列表
+                activeNav.click();
             }
+
+            // 尝试使用美观弹窗，失败则用 alert
+            try { showToastModal('成功', '保存成功'); } catch (e) { alert('保存成功'); }
+
         } else {
-            showToastModal('错误', result.error);
+            // 失败
+            console.error("业务逻辑失败:", result.error);
+            alert('保存失败: ' + (result.error || '未知错误'));
         }
     } catch (e) {
-        showToastModal('错误', e.message);
+        console.error("网络请求异常:", e);
+        alert('网络错误: ' + e.message);
     }
 }
 
-// 删除账户
 window.deleteAccount = async function (accountId) {
-    if (!confirm('确定要删除该账户吗？相关的账单统计可能会受到影响。')) return;
+    if (!confirm('确定要删除该账户吗？')) return;
 
     try {
         const result = await window.db.deleteAccount(accountId);
         if (result.success) {
-            showToastModal('成功', '账户已删除');
+            try { showToastModal('成功', '账户已删除'); } catch (e) { alert('已删除'); }
             loadAccounts();
-
             const activeNav = document.querySelector('.nav-item-active');
             if (activeNav && activeNav.textContent.includes('账户管理')) {
                 activeNav.click();
             }
         } else {
-            showToastModal('错误', result.error || '删除失败');
+            alert('删除失败: ' + result.error);
         }
     } catch (e) {
-        showToastModal('错误', e.message);
+        alert('错误: ' + e.message);
     }
 }
 
-// --- 3. 兼容导出 (供 app.js 导入使用) ---
-// 【关键修复】这里只导出 app.js 需要的别名，不重复导出 loadAccounts
-
+// 导出兼容
 export const saveAccount = () => window.handleAccountSubmit();
 export const showAccountEditModal = () => window.openAccountModal();
 export const closeAccountEditModal = () => window.closeAccountModal();
