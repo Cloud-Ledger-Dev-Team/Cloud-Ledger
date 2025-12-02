@@ -1,11 +1,11 @@
-// views/app.js - 前端主入口 (访客模式支持版)
+// views/app.js - 前端主入口 (修复快捷记账初始化)
 
 import {
     setupPasswordToggle,
     initPasswordToggles,
     showError,
     hideError,
-    checkUserLoggedIn, // 这个函数只检查 localStorage，我们需要更强的逻辑
+    checkUserLoggedIn,
     isScrolledToBottom
 } from './utils.js';
 
@@ -52,91 +52,49 @@ import {
 } from './navigation.js';
 
 // 主初始化功能
-export async function initApp() {
+export function initApp() {
     console.log('App Initializing...');
     initPasswordToggles();
     setupNavigation();
     bindEventListeners();
 
-    // 1. 判断当前是否在主界面（存在 userInfoPanel 说明是主界面）
-    if (document.getElementById('userInfoPanel')) {
-
-        // 2. 检查是否有用户数据
-        let userId = localStorage.getItem('user_id');
-
-        // 3. 【核心逻辑】如果是直接打开且没数据，自动创建一个访客账号
-        if (!userId) {
-            console.log("检测到访客访问，正在初始化临时账号...");
-            try {
-                // 随机生成一个访客账号
-                const guestName = 'Guest_' + Math.floor(Math.random() * 1000);
-                const guestEmail = `guest_${Date.now()}@local.com`;
-                const guestPwd = 'guestpassword';
-
-                // 调用注册接口获取有效的 user_id
-                const result = await window.db.register({
-                    name: guestName,
-                    email: guestEmail,
-                    password: guestPwd
-                });
-
-                if (result.success) {
-                    // 存入 localStorage，保证 CRUD 功能可用
-                    localStorage.setItem('user_id', result.user.user_id);
-                    localStorage.setItem('username', '访客');
-                    localStorage.setItem('user_email', '本地模式');
-                    console.log("访客账号初始化成功");
-                }
-            } catch (e) {
-                console.error("访客初始化失败:", e);
-            }
+    if (checkUserLoggedIn()) {
+        if (document.getElementById('userInfoPanel')) {
+            initializeAppContent();
         }
-
-        // 4. 加载业务数据 (此时 user_id 一定存在了)
-        initializeAppContent();
     }
 }
 
-// 加载应用核心数据
 function initializeAppContent() {
     const dateInput = document.getElementById('billDate');
     if (dateInput) dateInput.valueAsDate = new Date();
 
-    if (typeof initCategorySelection === 'function') initCategorySelection();
-    if (typeof initQuickInputOptions === 'function') initQuickInputOptions();
+    // 【关键修复】手动触发一次类型切换，强制渲染快捷选项
+    if (typeof switchBillType === 'function') {
+        switchBillType('expense'); // 初始化显示支出项
+    }
 
-    // 【关键】根据 session 标记决定是否显示左下角
     renderUserInfo();
 
     if (typeof loadAccounts === 'function') loadAccounts();
     if (typeof loadBills === 'function') loadBills();
 }
 
-// 渲染用户信息面板
 function renderUserInfo() {
+    const username = localStorage.getItem('username');
+    const email = localStorage.getItem('user_email');
+
     const panel = document.getElementById('userInfoPanel');
-    if (!panel) return;
+    const nameEl = document.getElementById('username');
+    const emailEl = document.getElementById('userEmail');
 
-    // 【关键修改】检查 sessionStorage 里的标记
-    // 只有从登录页跳转过来的，才有这个标记
-    const showPanel = sessionStorage.getItem('show_user_panel') === 'true';
-
-    if (showPanel) {
-        const username = localStorage.getItem('username');
-        const email = localStorage.getItem('user_email');
-        const nameEl = document.getElementById('username');
-        const emailEl = document.getElementById('userEmail');
-
+    if (panel) {
         if (username && nameEl) nameEl.textContent = username;
         if (email && emailEl) emailEl.textContent = email;
-
-        panel.classList.remove('hidden'); // 显示面板
-    } else {
-        panel.classList.add('hidden'); // 隐藏面板 (访客/直接打开)
+        panel.classList.remove('hidden');
     }
 }
 
-// 绑定事件 (保持不变)
 function bindEventListeners() {
     const loginForm = document.getElementById('loginForm');
     if (loginForm) loginForm.addEventListener('submit', handleLoginFormSubmit);
@@ -146,6 +104,23 @@ function bindEventListeners() {
 
     const forgotForm = document.getElementById('forgotPasswordForm');
     if (forgotForm) forgotForm.addEventListener('submit', handleForgotPasswordSubmit);
+
+    const loginTab = document.getElementById('loginTab');
+    if (loginTab) loginTab.addEventListener('click', switchToLoginTab);
+
+    const registerTab = document.getElementById('registerTab');
+    if (registerTab) registerTab.addEventListener('click', switchToRegisterTab);
+
+    const forgotLink = document.getElementById('forgotPasswordLink');
+    if (forgotLink) {
+        forgotLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showForgotPasswordModal();
+        });
+    }
+
+    const closeForgotBtn = document.getElementById('closeForgotPasswordModal');
+    if (closeForgotBtn) closeForgotBtn.addEventListener('click', closeForgotPasswordModal);
 
     const saveBillBtn = document.getElementById('saveBillButton');
     if (saveBillBtn) saveBillBtn.addEventListener('click', handleBillFormSubmit);
@@ -170,7 +145,6 @@ function bindEventListeners() {
     if (logoutBtn) logoutBtn.addEventListener('click', logout);
 }
 
-// 暴露全局函数
 window.setupPasswordToggle = setupPasswordToggle;
 window.initPasswordToggles = initPasswordToggles;
 window.showError = showError;

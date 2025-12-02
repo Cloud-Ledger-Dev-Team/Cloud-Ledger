@@ -144,96 +144,135 @@
                     <div class="lg:col-span-2 space-y-6 relative z-10">
                         <div class="bg-white p-6 rounded-lg shadow-md">
                             <h3 class="text-xl font-bold text-gray-800 mb-6">账单录入</h3>
+
+                            <!-- 收支切换 -->
                             <div class="flex border-b mb-6">
                                 <button id="expenseTab"
-                                    class="flex-1 py-3 text-center font-medium text-indigo-600 border-b-2 border-indigo-500"><i
-                                        class="fas fa-minus-circle mr-2"></i>支出</button>
-                                <button id="incomeTab" class="flex-1 py-3 text-center font-medium text-gray-500"><i
-                                        class="fas fa-plus-circle mr-2"></i>收入</button>
+                                    class="flex-1 py-3 text-center font-medium text-indigo-600 border-b-2 border-indigo-500">
+                                    <i class="fas fa-minus-circle mr-2"></i> 支出
+                                </button>
+                                <button id="incomeTab" class="flex-1 py-3 text-center font-medium text-gray-500">
+                                    <i class="fas fa-plus-circle mr-2"></i> 收入
+                                </button>
                             </div>
+
                             <input type="hidden" id="billType" value="expense">
                             <input type="hidden" id="billCategory" value="">
 
-                            <!-- 支出分类 -->
-                            <div id="expenseCategories" class="mb-6 grid grid-cols-4 gap-3">
-                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                    data-category="餐饮"><i class="fas fa-utensils text-xl text-amber-500 mb-2"></i><span
-                                        class="text-sm">餐饮</span></div>
-                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                    data-category="购物"><i
-                                        class="fas fa-shopping-bag text-xl text-purple-500 mb-2"></i><span
-                                        class="text-sm">购物</span></div>
-                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                    data-category="交通"><i class="fas fa-car text-xl text-blue-500 mb-2"></i><span
-                                        class="text-sm">交通</span></div>
-                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                    data-category="娱乐"><i class="fas fa-film text-xl text-red-500 mb-2"></i><span
-                                        class="text-sm">娱乐</span></div>
-                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                    data-category="住房"><i class="fas fa-home text-xl text-green-500 mb-2"></i><span
-                                        class="text-sm">住房</span></div>
-                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                    data-category="医疗"><i class="fas fa-heartbeat text-xl text-pink-500 mb-2"></i><span
-                                        class="text-sm">医疗</span></div>
-                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                    data-category="教育"><i class="fas fa-book text-xl text-indigo-500 mb-2"></i><span
-                                        class="text-sm">教育</span></div>
-                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                    data-category="其他"><i class="fas fa-ellipsis-h text-xl text-gray-500 mb-2"></i><span
-                                        class="text-sm">其他</span></div>
-                            </div>
-
-                            <!-- 收入分类 -->
-                            <div id="incomeCategories" class="mb-6 grid grid-cols-4 gap-3 hidden">
-                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                    data-category="工资"><i class="fas fa-wallet text-xl text-green-500 mb-2"></i><span
-                                        class="text-sm">工资</span></div>
-                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                    data-category="奖金"><i class="fas fa-gift text-xl text-red-500 mb-2"></i><span
-                                        class="text-sm">奖金</span></div>
-                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                    data-category="投资"><i class="fas fa-chart-line text-xl text-blue-500 mb-2"></i><span
-                                        class="text-sm">投资</span></div>
-                                <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
-                                    data-category="兼职"><i
-                                        class="fas fa-briefcase text-xl text-purple-500 mb-2"></i><span
-                                        class="text-sm">兼职</span></div>
-                            </div>
-
-                            <!-- 快捷记账 -->
-                            <div class="mb-6">
-                                <h4 class="text-gray-700 font-medium mb-3">快捷记账</h4>
-                                <div id="quickInputOptions" class="flex flex-wrap gap-3">
-                                    <!-- JS填充 -->
+                            <!-- 支出分类 (带标题的容器) -->
+                            <div id="expenseCategories" class="mb-6">
+                                <h4 class="text-gray-700 font-medium mb-3">选择分类</h4>
+                                <div class="grid grid-cols-4 gap-3">
+                                    <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                        data-category="餐饮"><i
+                                            class="fas fa-utensils text-xl text-amber-500 mb-2"></i><span
+                                            class="text-sm">餐饮</span></div>
+                                    <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                        data-category="购物"><i
+                                            class="fas fa-shopping-bag text-xl text-purple-500 mb-2"></i><span
+                                            class="text-sm">购物</span></div>
+                                    <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                        data-category="交通"><i class="fas fa-car text-xl text-blue-500 mb-2"></i><span
+                                            class="text-sm">交通</span></div>
+                                    <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                        data-category="娱乐"><i class="fas fa-film text-xl text-red-500 mb-2"></i><span
+                                            class="text-sm">娱乐</span></div>
+                                    <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                        data-category="住房"><i class="fas fa-home text-xl text-green-500 mb-2"></i><span
+                                            class="text-sm">住房</span></div>
+                                    <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                        data-category="医疗"><i
+                                            class="fas fa-heartbeat text-xl text-pink-500 mb-2"></i><span
+                                            class="text-sm">医疗</span></div>
+                                    <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                        data-category="教育"><i class="fas fa-book text-xl text-indigo-500 mb-2"></i><span
+                                            class="text-sm">教育</span></div>
+                                    <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                        data-category="其他"><i
+                                            class="fas fa-ellipsis-h text-xl text-gray-500 mb-2"></i><span
+                                            class="text-sm">其他</span></div>
                                 </div>
                             </div>
 
+                            <!-- 收入分类 (带标题的容器，包含完整的8个分类) -->
+                            <div id="incomeCategories" class="mb-6 hidden">
+                                <h4 class="text-gray-700 font-medium mb-3">选择分类</h4>
+                                <div class="grid grid-cols-4 gap-3">
+                                    <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                        data-category="工资"><i
+                                            class="fas fa-wallet text-xl text-green-500 mb-2"></i><span
+                                            class="text-sm">工资</span></div>
+                                    <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                        data-category="奖金"><i class="fas fa-gift text-xl text-red-500 mb-2"></i><span
+                                            class="text-sm">奖金</span></div>
+                                    <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                        data-category="投资"><i
+                                            class="fas fa-chart-line text-xl text-blue-500 mb-2"></i><span
+                                            class="text-sm">投资</span></div>
+                                    <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                        data-category="兼职"><i
+                                            class="fas fa-briefcase text-xl text-purple-500 mb-2"></i><span
+                                            class="text-sm">兼职</span></div>
+                                    <!-- 补回丢失的4个 -->
+                                    <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                        data-category="礼金"><i class="fas fa-heart text-xl text-pink-500 mb-2"></i><span
+                                            class="text-sm">礼金</span></div>
+                                    <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                        data-category="退款"><i
+                                            class="fas fa-sync-alt text-xl text-amber-500 mb-2"></i><span
+                                            class="text-sm">退款</span></div>
+                                    <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                        data-category="利息"><i
+                                            class="fas fa-percentage text-xl text-indigo-500 mb-2"></i><span
+                                            class="text-sm">利息</span></div>
+                                    <div class="category-item flex flex-col items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                                        data-category="其他"><i
+                                            class="fas fa-ellipsis-h text-xl text-gray-500 mb-2"></i><span
+                                            class="text-sm">其他</span></div>
+                                </div>
+                            </div>
+
+                            <!-- 快捷记账 (动态容器) -->
+                            <div class="mb-6">
+                                <h4 class="text-gray-700 font-medium mb-3">快捷记账</h4>
+                                <div id="quickInputOptions" class="flex flex-wrap gap-3">
+                                    <!-- JS 会在这里填充按钮 -->
+                                </div>
+                            </div>
+
+                            <!-- 输入表单 -->
                             <div class="space-y-4">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-gray-700 text-sm font-medium mb-2">金额</label>
-                                        <input class="w-full px-4 py-2 border rounded-lg" id="billAmount" type="number"
-                                            step="0.01" placeholder="0.00">
+                                        <input
+                                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            id="billAmount" type="number" step="0.01" placeholder="0.00">
                                     </div>
                                     <div>
                                         <label class="block text-gray-700 text-sm font-medium mb-2">日期</label>
-                                        <input class="w-full px-4 py-2 border rounded-lg" id="billDate" type="date">
+                                        <input
+                                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            id="billDate" type="date">
                                     </div>
                                 </div>
                                 <div>
                                     <label class="block text-gray-700 text-sm font-medium mb-2">账户</label>
-                                    <select class="w-full px-4 py-2 border rounded-lg" id="accountSelect">
+                                    <select
+                                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        id="accountSelect">
                                         <option value="">请选择账户</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="block text-gray-700 text-sm font-medium mb-2">备注</label>
-                                    <input class="w-full px-4 py-2 border rounded-lg" id="billDescription" type="text"
-                                        placeholder="添加备注...">
+                                    <input
+                                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        id="billDescription" type="text" placeholder="添加备注...">
                                 </div>
                                 <button id="saveBillButton"
-                                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-save mr-2"></i>保存账单
+                                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                                    <i class="fas fa-save mr-2"></i> 保存账单
                                 </button>
                             </div>
                         </div>
