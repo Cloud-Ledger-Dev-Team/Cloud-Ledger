@@ -1,25 +1,17 @@
-// views/account.js - 账户管理逻辑
+// views/account.js - 账户管理核心逻辑 (修复版)
 
 import { showToastModal } from './modal.js';
 
-/**
- * 加载账户列表
- */
+// --- 1. 基础加载 (直接导出，供 app.js 使用) ---
+
 export async function loadAccounts() {
-    console.log('正在加载账户数据...');
+    const currentUser = window.db.getCurrentUser();
+    if (!currentUser) return;
+
     try {
-        const currentUser = window.db.getCurrentUser();
-        if (!currentUser) return;
-
-        // 1. 调用后端 API 获取真实账户
         const accounts = await window.db.getAccounts(currentUser.userId);
-
-        // 2. 渲染账户管理页面的列表
-        renderAccountList(accounts);
-
-        // 3. 填充记账页面的“选择账户”下拉框
+        renderDashboardAccountList(accounts);
         populateAccountSelect(accounts);
-
         return accounts;
     } catch (error) {
         console.error("加载账户失败:", error);
@@ -27,163 +19,161 @@ export async function loadAccounts() {
     }
 }
 
-/**
- * 填充记账页面的账户下拉框
- */
+// 内部辅助函数：渲染首页右侧列表
+function renderDashboardAccountList(accounts) {
+    const container = document.getElementById('accountList');
+    if (!container) return;
+
+    container.innerHTML = '';
+    const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#1A535C', '#FF6B6B'];
+
+    if (accounts.length === 0) {
+        container.innerHTML = '<div class="text-gray-400 text-center py-4 text-sm">暂无账户</div>';
+        return;
+    }
+
+    accounts.forEach((account, index) => {
+        const color = colors[index % colors.length];
+        const div = document.createElement('div');
+        div.className = 'flex justify-between items-center bg-gray-50 p-3 rounded-lg mb-2 hover:shadow-md transition-shadow group';
+        div.innerHTML = `
+            <div class="flex items-center overflow-hidden">
+                <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white mr-3" style="background-color: ${color}">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <div class="truncate">
+                    <div class="font-medium text-gray-800 truncate" title="${account.name}">${account.name}</div>
+                    <div class="text-xs text-gray-500">${account.type}</div>
+                </div>
+            </div>
+            <div class="flex items-center flex-shrink-0 ml-2">
+                <div class="text-sm font-bold text-gray-700 mr-2">¥${parseFloat(account.balance).toFixed(2)}</div>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+// 内部辅助函数：填充下拉框
 function populateAccountSelect(accounts) {
     const select = document.getElementById('accountSelect');
     if (!select) return;
 
-    // 保留第一个“请选择”选项，清除其他的
-    select.innerHTML = '<option value="">请选择账户</option>';
+    const currentValue = select.value;
 
+    select.innerHTML = '<option value="">请选择账户</option>';
     accounts.forEach(account => {
         const option = document.createElement('option');
         option.value = account.account_id;
-        option.textContent = `${account.name} (余额: ¥${account.balance})`;
+        option.textContent = `${account.name} (¥${account.balance})`;
         select.appendChild(option);
     });
+
+    if (currentValue) select.value = currentValue;
 }
 
-/**
- * 渲染账户列表 DOM
- */
-function renderAccountList(accounts) {
-    const listContainers = [
-        document.getElementById('accountList'), // 首页右侧或账户页
-    ];
+// --- 2. 弹窗与交互逻辑 (挂载到 window 供 HTML onclick 使用) ---
 
-    const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#1A535C', '#FF6B6B'];
+// 打开弹窗
+window.openAccountModal = function (id = '', name = '', type = '现金', balance = '') {
+    const modal = document.getElementById('accountModal');
+    if (!modal) return;
 
-    listContainers.forEach(container => {
-        if (!container) return;
-        container.innerHTML = ''; // 清空
+    document.getElementById('accModalId').value = id;
+    document.getElementById('accModalName').value = name;
+    document.getElementById('accModalType').value = type;
+    document.getElementById('accModalBalance').value = balance;
 
-        if (accounts.length === 0) {
-            container.innerHTML = '<div class="text-gray-400 text-center py-4">暂无账户，请添加</div>';
-            return;
-        }
+    const title = document.getElementById('accModalTitle');
+    if (title) title.textContent = id ? '编辑账户' : '添加账户';
 
-        accounts.forEach((account, index) => {
-            const color = colors[index % colors.length];
-            const div = document.createElement('div');
-            div.className = 'flex justify-between items-center bg-gray-50 p-3 rounded-lg mb-2 hover:shadow-md transition-shadow';
-            div.innerHTML = `
-                <div class="flex items-center">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-white mr-3" style="background-color: ${color}">
-                        <i class="fas fa-wallet"></i>
-                    </div>
-                    <div>
-                        <div class="font-medium text-gray-800">${account.name}</div>
-                        <div class="text-xs text-gray-500">${account.type}</div>
-                    </div>
-                </div>
-                <div class="flex items-center">
-                    <div class="text-lg font-bold text-gray-700 mr-3">¥${parseFloat(account.balance).toFixed(2)}</div>
-                    <button class="text-red-400 hover:text-red-600" onclick="deleteAccount('${account.account_id}')">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-    });
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        const content = document.getElementById('accModalContent');
+        if (content) content.classList.remove('scale-90', 'opacity-0');
+    }, 10);
 }
 
-/**
- * 保存账户 (新增)
- */
-export async function saveAccount() {
-    const name = document.getElementById('accountName').value;
-    const balance = document.getElementById('accountBalance').value;
+// 关闭弹窗
+window.closeAccountModal = function () {
+    const modal = document.getElementById('accountModal');
+    const content = document.getElementById('accModalContent');
+    if (!modal) return;
 
-    const initialBalance = balance ? parseFloat(balance) : 0.0;
+    if (content) content.classList.add('scale-90', 'opacity-0');
+    modal.classList.add('opacity-0');
+    setTimeout(() => modal.classList.add('hidden'), 200);
+}
 
-    if (!name) {
-        showToastModal('提示', '请输入账户名称');
-        return;
-    }
+// 提交表单
+window.handleAccountSubmit = async function () {
+    const id = document.getElementById('accModalId').value;
+    const name = document.getElementById('accModalName').value;
+    const type = document.getElementById('accModalType').value;
+    const balance = document.getElementById('accModalBalance').value;
+
+    if (!name) { showToastModal('提示', '请输入账户名称'); return; }
 
     const currentUser = window.db.getCurrentUser();
-
-    const accountData = {
+    const data = {
         user_id: currentUser.userId,
         name: name,
-        type: '现金',
-        balance: initialBalance
+        type: type,
+        balance: balance ? parseFloat(balance) : 0.0
     };
 
     try {
-        const result = await window.db.addAccount(accountData);
-        if (result.success) {
-            showToastModal('成功', '账户添加成功');
-            closeAccountEditModal(); // 关闭弹窗
-            loadAccounts(); // 重新加载
+        let result;
+        if (id) {
+            result = await window.db.updateAccount(id, data);
         } else {
-            showToastModal('错误', result.error || '添加失败');
+            result = await window.db.addAccount(data);
         }
-    } catch (error) {
-        showToastModal('错误', '网络错误: ' + error.message);
+
+        if (result.success) {
+            showToastModal('成功', id ? '账户已更新' : '账户已添加');
+            window.closeAccountModal();
+            loadAccounts(); // 刷新
+
+            const activeNav = document.querySelector('.nav-item-active');
+            if (activeNav && activeNav.textContent.includes('账户管理')) {
+                activeNav.click(); // 重新触发页面加载以更新列表
+            }
+        } else {
+            showToastModal('错误', result.error);
+        }
+    } catch (e) {
+        showToastModal('错误', e.message);
     }
 }
 
-// 【关键修复】补全主文件需要的弹窗控制函数，并添加 export
-export function showAccountEditModal() {
-    const modal = document.getElementById('accountEditModal');
-    const modalContent = document.getElementById('accountEditModalContentContainer');
-    if (modal && modalContent) {
-        // 清空旧数据
-        document.getElementById('accountForm').reset();
-        document.getElementById('accountId').value = '';
-
-        modal.classList.remove('hidden');
-        setTimeout(() => {
-            modal.classList.remove('opacity-0');
-            modalContent.classList.remove('scale-90', 'opacity-0');
-            modalContent.classList.add('scale-100', 'opacity-100');
-        }, 10);
-    }
-}
-
-export function closeAccountEditModal() {
-    const modal = document.getElementById('accountEditModal');
-    const modalContent = document.getElementById('accountEditModalContentContainer');
-    if (modal && modalContent) {
-        modalContent.classList.remove('scale-100', 'opacity-100');
-        modalContent.classList.add('scale-90', 'opacity-0');
-        modal.classList.add('opacity-0');
-        setTimeout(() => {
-            modal.classList.add('hidden');
-        }, 200);
-    }
-}
-
-// 供编辑使用的空函数（预留）
-export function editAccount(accountId) {
-    console.log("编辑账户功能暂未完全实装", accountId);
-    showAccountEditModal();
-}
-
-/**
- * 删除账户 (挂载到 window 以便 HTML onclick 调用)
- */
+// 删除账户
 window.deleteAccount = async function (accountId) {
-    if (!confirm('确定要删除该账户吗？相关账单可能也会受到影响。')) return;
+    if (!confirm('确定要删除该账户吗？相关的账单统计可能会受到影响。')) return;
 
     try {
         const result = await window.db.deleteAccount(accountId);
         if (result.success) {
             showToastModal('成功', '账户已删除');
-            loadAccounts(); // 刷新
+            loadAccounts();
+
+            const activeNav = document.querySelector('.nav-item-active');
+            if (activeNav && activeNav.textContent.includes('账户管理')) {
+                activeNav.click();
+            }
         } else {
             showToastModal('错误', result.error || '删除失败');
         }
-    } catch (error) {
-        console.error(error);
+    } catch (e) {
+        showToastModal('错误', e.message);
     }
 }
 
-// 导出给全局使用
-window.loadAccounts = loadAccounts;
-window.saveAccount = saveAccount;
-window.closeAccountEditModal = closeAccountEditModal;
+// --- 3. 兼容导出 (供 app.js 导入使用) ---
+// 【关键修复】这里只导出 app.js 需要的别名，不重复导出 loadAccounts
+
+export const saveAccount = () => window.handleAccountSubmit();
+export const showAccountEditModal = () => window.openAccountModal();
+export const closeAccountEditModal = () => window.closeAccountModal();
+export const editAccount = (id) => window.openAccountModal(id);

@@ -76,13 +76,14 @@ pip install -r requirements.txt
 
 ```bash
 cd controllers
-pip install flask_jwt_extended  //若报错，输入 python -m pip install -r requirements.txt flask_jwt_extended 
+pip install flask_jwt_extended  //若报错，输入 python -m pip install -r requirements.txt  
 python models/init_db.py
 ```
 
 ### 3. 运行应用
 
 ```bash
+cd ..
 python main.py
 ```
 
