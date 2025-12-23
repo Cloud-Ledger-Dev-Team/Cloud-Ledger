@@ -661,17 +661,36 @@
                         bills.forEach(bill => {
                             const isExpense = bill.type === 'expense';
                             const color = isExpense ? 'text-red-500' : 'text-green-500';
+                            // 确保ID存在
+                            const bid = bill.bill_id || bill.transaction_id;
+                            // 确保文本字段不为 undefined，防止 JS 报错
+                            const bCat = bill.category || '';
+                            const bDesc = bill.description || '';
+                            const bDate = bill.date || '';
+
                             html += `
                                 <div class="flex justify-between items-center p-4 bg-white border border-gray-100 rounded-lg shadow-sm">
                                     <div class="flex-1">
-                                        <div class="flex items-center gap-2"><span class="font-bold">${bill.category || '未分类'}</span><span class="text-xs px-2 py-0.5 rounded bg-gray-100">${isExpense ? '支出' : '收入'}</span></div>
-                                        <div class="text-xs text-gray-500 mt-1">${bill.date} ${bill.description || ''}</div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-bold">${bCat || '未分类'}</span>
+                                            <span class="text-xs px-2 py-0.5 rounded bg-gray-100">${isExpense ? '支出' : '收入'}</span>
+                                        </div>
+                                        <div class="text-xs text-gray-500 mt-1">${bDate} ${bDesc}</div>
                                     </div>
                                     <div class="text-right flex items-center gap-4">
                                         <div class="text-lg font-bold ${color}">${isExpense ? '-' : '+'}¥${parseFloat(bill.amount).toFixed(2)}</div>
                                         <div class="flex space-x-1">
-                                            <button onclick="window.openEditBillModal('${bill.bill_id}', ${bill.amount}, '${bill.category}', '${bill.description}', '${bill.date}', '${bill.type}')" class="text-blue-500 p-2"><i class="fas fa-edit"></i></button>
-                                            <button onclick="window.deleteBill('${bill.bill_id}')" class="text-red-500 p-2"><i class="fas fa-trash-alt"></i></button>
+                                            <!-- 【修复】编辑按钮：调用 openEditBillModal，参数加引号 -->
+                                            <button onclick="window.openEditBillModal('${bid}', ${bill.amount}, '${bCat}', '${bDesc}', '${bDate}')"
+                                                class="text-blue-500 p-2 hover:bg-blue-50 rounded transition-colors" title="编辑">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            
+                                            <!-- 【修复】删除按钮：调用 triggerDeleteBill 触发确认弹窗 -->
+                                            <button onclick="window.triggerDeleteBill('${bid}')"
+                                                class="text-red-500 p-2 hover:bg-red-50 rounded transition-colors" title="删除">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>`;
@@ -760,6 +779,46 @@
             }
         });
     </script>
+
+    <!-- 删除账单弹窗 (补在这个位置) -->
+    <div id="deleteBillModal"
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
+        <div id="deleteBillContent"
+            class="bg-white rounded-xl p-6 w-full max-w-sm transform scale-90 opacity-0 transition-all">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">删除账单</h3>
+            <p class="mb-6 text-gray-600">确定要删除这条账单吗？此操作不可恢复。</p>
+
+            <div class="modal-actions flex justify-end space-x-3">
+                <button class="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+                    id="cancelDeleteBill">取消</button>
+                <button class="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors shadow-sm"
+                    id="confirmDeleteBill">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新建分类弹窗 (新增) -->
+    <div id="newCategoryModal"
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
+        <div id="newCategoryContent"
+            class="bg-white rounded-xl p-6 w-full max-w-sm transform scale-90 opacity-0 transition-all">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">新建分类</h3>
+
+            <div class="mb-6">
+                <label class="block text-sm text-gray-600 mb-2">分类名称</label>
+                <input type="text" id="newCategoryInputName" placeholder="例如：零食、打车..."
+                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+            </div>
+
+            <div class="modal-actions flex justify-end space-x-3">
+                <button onclick="window.closeModal('newCategoryModal')"
+                    class="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">取消</button>
+                <button id="confirmCreateCategoryBtn"
+                    class="px-6 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg transition-colors shadow-sm">确定</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>
