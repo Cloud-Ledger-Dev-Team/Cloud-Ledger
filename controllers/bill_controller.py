@@ -7,18 +7,33 @@ from models.database_models import db, Bill, Account
 bill_bp = Blueprint('bill_bp', __name__)
 
 # 获取账单 (GET /api/bills)
-# 前端传参是 ?user_id=...
+# 前端传参是 ?user_id=...&type=...&startDate=...&endDate=...
 @bill_bp.route('', methods=['GET'], strict_slashes=False)
 def get_bills():
     user_id = request.args.get('user_id')
+    bill_type = request.args.get('type')      # income / expense
+    start_date = request.args.get('startDate')
+    end_date = request.args.get('endDate')
+
     if not user_id:
         return jsonify({'success': False, 'error': '缺少 user_id'})
 
-    query = Bill.query.filter_by(user_id=user_id)
-    # ... (保留筛选逻辑，如果需要) ...
-    
+    query = Bill.query.filter(Bill.user_id == user_id)
+
+    # ✅ 类型筛选
+    if bill_type and bill_type != '':
+        query = query.filter(Bill.type == bill_type)
+
+    # ✅ 开始日期
+    if start_date:
+        query = query.filter(Bill.date >= start_date)
+
+    # ✅ 结束日期
+    if end_date:
+        query = query.filter(Bill.date <= end_date)
+
     bills = query.order_by(Bill.date.desc()).all()
-    
+
     return jsonify({
         'success': True,
         'bills': [{

@@ -457,6 +457,15 @@
                     const typeRadio = document.querySelector('input[name="filterType"]:checked');
                     const start = document.getElementById('filterStartDate').value;
                     const end = document.getElementById('filterEndDate').value;
+
+                    // ✅ 新增：日期合法性校验
+                    if (start && end) {
+                        if (new Date(end) < new Date(start)) {
+                            alert('结束日期不能早于开始日期');
+                            return;
+                        }
+                    }
+
                     if (window.loadBills) window.loadBills({ type: typeRadio?.value, startDate: start, endDate: end });
                     closeFilter();
                 });

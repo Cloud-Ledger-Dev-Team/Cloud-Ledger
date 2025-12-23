@@ -60,7 +60,21 @@ function logout() {
 
 // 账单模块
 async function getBills(filters = {}) {
-    let query = `?user_id=${filters.user_id}`;
+    const params = new URLSearchParams();
+    params.append('user_id', filters.user_id);
+    
+    // 添加筛选条件
+    if (filters.type && filters.type !== '') {
+        params.append('type', filters.type);
+    }
+    if (filters.startDate) {
+        params.append('startDate', filters.startDate);
+    }
+    if (filters.endDate) {
+        params.append('endDate', filters.endDate);
+    }
+    
+    const query = `?${params.toString()}`;
     const result = await apiRequest(`/api/bills${query}`, 'GET');
     return result.bills || [];
 }
