@@ -49,6 +49,15 @@
             border-color: #10b981;
             background-color: rgba(16, 185, 129, 0.1);
         }
+
+        .feedback-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 1000;
+        }
     </style>
 </head>
 
@@ -413,6 +422,45 @@
         </div>
     </div>
 
+    <!-- 4. 反馈弹窗 -->
+    <div id="feedbackModal"
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
+        <div id="feedbackModalContent"
+            class="bg-white rounded-xl p-6 w-full max-w-sm transform scale-90 opacity-0 transition-all">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">问题反馈</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">类型</label>
+                    <select id="feedbackType" class="w-full border rounded-lg p-2">
+                        <option value="Bug">Bug</option>
+                        <option value="功能建议">功能建议</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">内容</label>
+                    <textarea id="feedbackContent" rows="5" placeholder="请输入你的问题或建议"
+                        class="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">联系方式（可选）</label>
+                    <input type="text" id="feedbackContact" placeholder="邮箱"
+                        class="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
+                <button onclick="window.closeFeedbackModal()" class="px-4 py-2 text-gray-500">取消</button>
+                <button id="submitFeedback" onclick="window.submitFeedback()"
+                    class="px-6 py-2 bg-primary text-white rounded-lg">提交</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右下角悬浮反馈按钮 -->
+    <button id="feedbackButton"
+        class="feedback-btn bg-primary text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:bg-primary/90 transition-all duration-300 text-2xl z-40">
+        💬
+    </button>
+
     <!-- Scripts -->
     <script src="database.js"></script>
     <script type="module" src="app.js"></script>
@@ -485,6 +533,115 @@
                     if (nav) nav.click();
                 });
             }
+
+            // 反馈功能逻辑
+            const feedbackBtn = document.getElementById('feedbackButton');
+            const feedbackModal = document.getElementById('feedbackModal');
+            const feedbackContent = document.getElementById('feedbackModalContent');
+
+            if (feedbackBtn) {
+                feedbackBtn.addEventListener('click', () => {
+                    feedbackModal.classList.remove('hidden');
+                    setTimeout(() => {
+                        feedbackModal.classList.remove('opacity-0');
+                        feedbackContent.classList.remove('scale-90', 'opacity-0');
+                        feedbackContent.classList.add('scale-100', 'opacity-100');
+                    }, 10);
+                });
+            }
+
+            if (feedbackModal) {
+                feedbackModal.addEventListener('click', (e) => {
+                    if (e.target === feedbackModal) {
+                        closeFeedbackModal();
+                    }
+                });
+            }
+
+            // 关闭反馈弹窗
+            window.closeFeedbackModal = function () {
+                feedbackContent.classList.add('scale-90', 'opacity-0');
+                feedbackModal.classList.add('opacity-0');
+                setTimeout(() => {
+                    feedbackModal.classList.add('hidden');
+                }, 200);
+            };
+
+            // 显示Toast提示
+            window.showToast = function (message) {
+                // 创建Toast元素
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300 opacity-0';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+
+                // 显示Toast
+                setTimeout(() => {
+                    toast.classList.remove('opacity-0');
+                    toast.classList.add('opacity-100');
+                }, 10);
+
+                // 3秒后隐藏Toast
+                setTimeout(() => {
+                    toast.classList.remove('opacity-100');
+                    toast.classList.add('opacity-0');
+                    setTimeout(() => {
+                        document.body.removeChild(toast);
+                    }, 300);
+                }, 3000);
+            };
+
+            // 提交反馈
+            window.submitFeedback = async function () {
+                const type = document.getElementById('feedbackType').value;
+                const content = document.getElementById('feedbackContent').value;
+                const contact = document.getElementById('feedbackContact').value;
+
+                // 验证内容不能为空
+                if (!content.trim()) {
+                    alert('反馈内容不能为空');
+                    return;
+                }
+
+                try {
+                    // 获取token
+                    const token = localStorage.getItem('token') || localStorage.getItem('access_token');
+                    if (!token) {
+                        alert('请先登录');
+                        return;
+                    }
+
+                    // 发送请求
+                    const response = await fetch('http://localhost:5000/api/feedback', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            type: type,
+                            content: content,
+                            contact: contact
+                        })
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        // 显示成功提示
+                        showToast('提交成功，感谢你的反馈 🙏');
+                        // 关闭弹窗
+                        closeFeedbackModal();
+                        // 清空表单
+                        document.getElementById('feedbackContent').value = '';
+                        document.getElementById('feedbackContact').value = '';
+                    } else {
+                        alert(result.error || '提交失败，请重试');
+                    }
+                } catch (error) {
+                    console.error('Feedback Error:', error);
+                    alert('提交失败，请检查网络连接');
+                }
+            };
 
             // 渲染动态内容
             function updateContentArea(moduleName, data) {

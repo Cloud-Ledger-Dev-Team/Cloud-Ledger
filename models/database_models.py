@@ -39,3 +39,11 @@ class Budget(db.Model):
     user_id = db.Column(db.String(50), db.ForeignKey('user.user_id'), nullable=False)
     month = db.Column(db.String(7), nullable=False)  # YYYY-MM 格式
     amount = db.Column(db.Float, nullable=False)
+
+class Feedback(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String(50), db.ForeignKey('user.user_id'), nullable=False)
+    type = db.Column(db.String(50))  # Bug 或 建议
+    content = db.Column(db.Text, nullable=False)
+    contact = db.Column(db.String(100))  # 联系方式（可选）
+    created_at = db.Column(db.DateTime, server_default=db.func.now())

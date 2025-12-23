@@ -12,6 +12,7 @@ from controllers.budget_controller import budget_bp
 from controllers.category_controller import category_bp
 from controllers.report_controller import report_bp
 from controllers.transaction_controller import transaction_bp
+from controllers.feedback_controller import feedback_bp
 
 app = Flask(__name__, template_folder='../views', static_folder='../views')
 
@@ -34,6 +35,7 @@ app.register_blueprint(budget_bp, url_prefix='/api/budgets')
 app.register_blueprint(category_bp, url_prefix='/api/categories')
 app.register_blueprint(report_bp, url_prefix='/api/analytics')
 app.register_blueprint(transaction_bp, url_prefix='/api/transactions')
+app.register_blueprint(feedback_bp, url_prefix='/api')
 
 # ==========================================
 # 【终极修正】CORS 动态镜像配置
