@@ -75,3 +75,87 @@ def add_bill():
     db.session.commit()
     
     return jsonify({'success': True})
+
+# 更新账单 (PUT /api/bills/<bill_id>)
+@bill_bp.route('/<bill_id>', methods=['PUT'], strict_slashes=False)
+def update_bill(bill_id):
+    data = request.json
+    
+    # 1. 查找账单
+    bill = Bill.query.filter_by(bill_id=bill_id).first()
+    if not bill:
+        return jsonify({'success': False, 'error': '账单不存在'})
+    
+    # 2. 先恢复原账户的余额
+    account = Account.query.filter_by(account_id=bill.account_id).first()
+    if account:
+        if bill.type == 'income':
+            account.balance -= bill.amount
+        else:
+            account.balance += bill.amount
+    
+    # 3. 更新账单信息
+    old_account_id = bill.account_id
+    bill.amount = data['amount']
+    bill.category = data['category']
+    bill.date = datetime.strptime(data['date'], '%Y-%m-%d').date()
+    bill.description = data.get('description', '')
+    
+    # 4. 如果账户改变了，需要更新新账户的余额
+    if 'account_id' in data and data['account_id'] != old_account_id:
+        # 更新新账户
+        new_account = Account.query.filter_by(account_id=data['account_id']).first()
+        if new_account:
+            if bill.type == 'income':
+                new_account.balance += bill.amount
+            else:
+                new_account.balance -= bill.amount
+        bill.account_id = data['account_id']
+    else:
+        # 更新原账户
+        if account:
+            if bill.type == 'income':
+                account.balance += bill.amount
+            else:
+                account.balance -= bill.amount
+    
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'message': '账单更新成功',
+        'bill': {
+            'bill_id': bill.bill_id,
+            'user_id': bill.user_id,
+            'type': bill.type,
+            'category': bill.category,
+            'amount': bill.amount,
+            'date': bill.date.strftime('%Y-%m-%d'),
+            'description': bill.description
+        }
+    })
+
+# 删除账单 (DELETE /api/bills/<bill_id>)
+@bill_bp.route('/<bill_id>', methods=['DELETE'], strict_slashes=False)
+def delete_bill(bill_id):
+    # 1. 查找账单
+    bill = Bill.query.filter_by(bill_id=bill_id).first()
+    if not bill:
+        return jsonify({'success': False, 'error': '账单不存在'})
+    
+    # 2. 恢复账户余额
+    account = Account.query.filter_by(account_id=bill.account_id).first()
+    if account:
+        if bill.type == 'income':
+            account.balance -= bill.amount
+        else:
+            account.balance += bill.amount
+    
+    # 3. 删除账单
+    db.session.delete(bill)
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'message': '账单删除成功'
+    })

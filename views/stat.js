@@ -55,6 +55,14 @@ export function renderCharts(bills) {
     });
 }
 
+// 监听账单变化事件，同步刷新图表
+document.addEventListener('billChanged', async () => {
+    // 尝试从window获取当前账单数据，如果没有则不刷新
+    if (window.currentBills) {
+        renderCharts(window.currentBills);
+    }
+});
+
 /**
  * 数据分析页大图表渲染函数 (供 cloud_ledger.html 调用)
  */
