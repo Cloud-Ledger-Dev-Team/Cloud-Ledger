@@ -76,19 +76,19 @@ Cloud-Ledger/
 
 在项目根目录下运行：
 ```bash
-pip install -r requirements.txt
+py -m pip install -r requirements.txt
 ```
 
 ### 2. 初始化数据库
 
 ```bash
-python models/init_db.py
+py models/init_db.py
 ```
 
 ### 3. 运行应用
 
 ```bash
-python main.py
+py main.py
 ```
 
 应用将在 http://localhost:5000 启动。
@@ -225,7 +225,7 @@ python main.py
 ### 环境配置
 ```bash
 # 创建虚拟环境
-python -m venv venv
+py -m venv venv
 
 # 激活虚拟环境
 # Windows
@@ -234,7 +234,7 @@ venv\Scripts\activate
 source venv/bin/activate
 
 # 安装依赖
-pip install -r requirements.txt
+py -m pip install -r requirements.txt
 ```
 
 ### 数据库操作
@@ -266,3 +266,4 @@ pip install -r requirements.txt
 3. 开发移动端适配版本
 4. 添加图表可视化功能
 5. 实现更智能的预算分析和财务建议
+
