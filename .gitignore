@@ -1,0 +1,64 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.idea/
+.vscode/
+
+# Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Python dependencies
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Test coverage
+coverage/
+*.lcov
+
+# Build files
+build/
+dist/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Java build output（含编译后的配置副本与测试报告，禁止入库）
+target/
+
+# Logs
+*.log
+logs/
+
+# Frontend npm cache
+.npm-cache/
+
+# Sensitive local overrides（本地真实凭证一律不入库）
+application-local.yml
+*.local.yml
+
+# Temporary files
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace

@@ -1,0 +1,53 @@
+# ======================================================
+# Cloud-Ledger 敏感配置统一载体（唯一环境配置文件）
+# ------------------------------------------------------
+# 本文件是项目中唯一存放敏感配置实际值的文件（数据库凭证、
+# Redis 连接、JWT 密钥、监控台账号等），application.yml 仅
+# 通过 ${property.name} 占位符引用，实现敏感信息与主配置解耦。
+#
+# 优先级说明：application-{profile}.yml 高于 application.yml，
+# spring.profiles.active=dev 时本文件的值会覆盖主配置中的
+# 同名属性，占位符解析时优先读取本文件定义的值。
+#
+# ⚠ 安全提示：本文件已脱敏，所有凭证均为占位符。本地运行前请
+#   替换为你自己的真实凭证；切勿将真实密钥/密码提交到公开仓库。
+#
+# 生产环境：不再使用独立配置文件，Spring Boot 宽松绑定会将
+# 环境变量自动映射到同名属性（如 cloud-ledger.datasource.url
+# ← CLOUD_LEDGER_DATASOURCE_URL），凭证通过容器编排注入，
+# 不落盘任何明文。
+# ======================================================
+
+cloud-ledger:
+  # ---- MySQL 数据库连接 ----
+  datasource:
+    url: jdbc:mysql://localhost:3306/cloud_ledger?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: "你的MySQL密码"          # 占位符：请替换为本地 MySQL root 密码
+  # ---- Redis 连接 ----
+  redis:
+    host: localhost
+    port: 6379
+    password: ""
+  # ---- JWT 签名密钥（≥ 32 字节）----
+  jwt:
+    secret: "change-me-to-a-random-secret-key-32-bytes-min!"   # 占位符：请替换为 ≥32 字节随机密钥
+  # ---- Druid 监控台账号（仅开发环境开放，生产由环境变量禁用）----
+  druid:
+    login-username: admin
+    login-password: "你的Druid控制台密码"   # 占位符：请替换为监控台登录密码
+  # ---- 邮箱 SMTP（忘记密码验证码，必须填写后才能真实发信）----
+  # QQ 邮箱：host=smtp.qq.com port=465(SSL)，password 填写「设置→账户→POP3/SMTP 服务」生成的授权码（非登录密码）
+  # 163 邮箱：host=smtp.163.com port=465(SSL)，password 同样填写客户端授权码
+  # 587 端口：将 ssl-enable 置 false、starttls-enable 置 true
+  mail:
+    host: "smtp.qq.com"
+    port: 465
+    username: "your-email@qq.com"    # 占位符：发件邮箱完整地址
+    password: "你的SMTP授权码"        # 占位符：QQ 邮箱「设置→账户→POP3/SMTP 服务」生成的授权码
+    ssl-enable: true
+    starttls-enable: false
+  # ---- 微信小程序配置（微信登录 code2Session）----
+  wx:
+    appid: your-wx-appid             # 占位符：小程序 AppID
+    secret: your-wx-secret           # 占位符：小程序 AppSecret（仅服务端持有）

@@ -1,0 +1,215 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+    # HTTP 请求/响应字符集统一 UTF-8：覆盖表单、查询串等非 JSON 场景，
+    # 与 JDBC(characterEncoding=utf8)、SQL 脚本(sql.init.encoding)、Redis(JSON 字符串) 全链路一致
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  application:
+    name: cloud-ledger
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    property-naming-strategy: SNAKE_CASE
+    default-property-inclusion: non_null
+
+  # ==================== MySQL / Druid 数据源 ====================
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 敏感值（连接串/账号/密码）统一存放于 application-dev.yml，此处仅占位引用
+    url: ${cloud-ledger.datasource.url}
+    username: ${cloud-ledger.datasource.username}
+    password: ${cloud-ledger.datasource.password}
+    druid:
+      # 连接池参数
+      initial-size: 5
+      min-idle: 10
+      max-active: 20
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      max-evictable-idle-time-millis: 900000
+      validation-query: SELECT 1
+      validation-query-timeout: 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      # 监控
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+        login-username: ${cloud-ledger.druid.login-username}
+        login-password: ${cloud-ledger.druid.login-password}
+        reset-enable: false
+        # 生产环境通过 profile 关闭
+        allow: 127.0.0.1
+        deny:
+      # 防火墙
+      filter:
+        stat:
+          enabled: true
+          log-slow-sql: true
+          slow-sql-millis: 2000
+        wall:
+          enabled: true
+          config:
+            multi-statement-allow: false
+            comment-allow: false
+        slf4j:
+          enabled: true
+
+  # ==================== Redis ====================
+  data:
+    redis:
+      # 敏感值（主机/端口/密码）统一存放于 application-dev.yml
+      host: ${cloud-ledger.redis.host}
+      port: ${cloud-ledger.redis.port}
+      password: ${cloud-ledger.redis.password}
+      database: 0
+      timeout: 5000
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 0
+          max-wait: 3000ms
+
+  # ==================== SQL 初始化 ====================
+  sql:
+    init:
+      mode: never
+      # 显式指定 UTF-8：Windows + JDK 1.8 下 JVM 默认编码为 GBK，
+      # 不指定会导致 schema.sql 中的中文种子数据被按 GBK 误解后入库成乱码
+      encoding: utf-8
+      schema-locations: classpath:sql/schema.sql
+      continue-on-error: true
+
+  # ==================== 邮件（密码重置验证码，SMTP 凭证见 application-dev.yml） ====================
+  mail:
+    host: ${cloud-ledger.mail.host:}
+    port: ${cloud-ledger.mail.port:465}
+    username: ${cloud-ledger.mail.username:}
+    password: ${cloud-ledger.mail.password:}
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+          # 465 端口走 SSL；如改用 587 端口请在 dev 配置中关闭 ssl 并开启 starttls
+          ssl:
+            enable: ${cloud-ledger.mail.ssl-enable:true}
+          starttls:
+            enable: ${cloud-ledger.mail.starttls-enable:false}
+
+# ==================== MyBatis Plus ====================
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.cloudledger.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: ASSIGN_UUID
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# ==================== JWT ====================
+jwt:
+  # 敏感值（签名密钥）统一存放于 application-dev.yml
+  secret: ${cloud-ledger.jwt.secret}
+  expiration: 1800000    # 30 min (毫秒)
+  blacklist-prefix: "cloud-ledger:jwt:blacklist"
+
+# ==================== Redis 缓存 Key 前缀 ====================
+cache:
+  redis:
+    session-prefix: "cloud-ledger:session:"
+    category-prefix: "cloud-ledger:category:"
+    account-prefix: "cloud-ledger:account:"
+    report-prefix: "cloud-ledger:report:"
+    budget-prefix: "cloud-ledger:budget:"
+    verify-prefix: "cloud-ledger:verify:"
+    security-prefix: "cloud-ledger:security:"
+    ttl-session: 1800      # 30 min
+    ttl-category: 3600     # 60 min
+    ttl-account: 600        # 10 min
+    ttl-report-monthly: 1800
+    ttl-report-trend: 3600
+    ttl-budget-exec: 1800
+
+# ==================== 密码安全策略 ====================
+cloud-ledger:
+  security:
+    # 忘记密码邮件验证码
+    reset-code:
+      ttl-seconds: 300              # 验证码有效期 5 min
+      resend-cooldown-seconds: 60   # 同一邮箱发送冷却 60 s
+      max-attempts: 5               # 连续输错上限，达到后验证码作废
+    # 改密后旧 Token 失效标记（TTL 与 JWT 有效期对齐，覆盖全部存量 Token）
+    password-change:
+      marker-ttl-seconds: 1800
+    # 发件人信息（from 默认取 SMTP 登录账号）
+    mail:
+      from: ${cloud-ledger.mail.username:}
+      from-name: "Cloud-Ledger 云记账"
+
+# ==================== Knife4j / SpringDoc ====================
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  group-configs:
+    - group: 'default'
+      packages-to-scan: com.cloudledger.controller
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+    swagger-model-name: 实体类列表
+
+# ==================== Actuator ====================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,redis,metrics
+  endpoint:
+    health:
+      show-details: always
+  health:
+    # 关闭邮件健康指标：避免健康检查同步连接 SMTP（发信能力由业务接口与审计日志保障）
+    mail:
+      enabled: false
+
+# ==================== 日志 ====================
+logging:
+  # 显式声明控制台输出 UTF-8，避免 Windows PowerShell 终端按 GBK 解码出现中文乱码
+  charset:
+    console: UTF-8
+    file: UTF-8
+  level:
+    root: INFO
+    com.cloudledger: DEBUG
+    com.alibaba.druid: INFO

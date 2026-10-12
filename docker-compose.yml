@@ -1,0 +1,90 @@
+# ======================================================
+# Cloud-Ledger 云记账 Docker Compose 编排
+# 服务：mysql / redis / backend / frontend
+# ------------------------------------------------------
+# ⚠ 安全提示：所有凭证均通过环境变量注入（支持 .env 文件或
+#   shell 环境变量），默认值为占位符，首次部署前必须修改，
+#   切勿将真实密码/密钥硬编码进本文件提交到公开仓库。
+# ======================================================
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: cloud-ledger-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-change_me}"   # 占位符：部署前必须修改
+      MYSQL_DATABASE: cloud_ledger
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: cloud-ledger-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cloud-ledger-backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      # Spring Boot 宽松绑定：环境变量自动映射到 cloud-ledger.* 属性
+      CLOUD_LEDGER_DATASOURCE_URL: "jdbc:mysql://mysql:3306/cloud_ledger?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true"
+      CLOUD_LEDGER_DATASOURCE_USERNAME: root
+      CLOUD_LEDGER_DATASOURCE_PASSWORD: "${MYSQL_ROOT_PASSWORD:-change_me}"
+      CLOUD_LEDGER_REDIS_HOST: redis
+      CLOUD_LEDGER_REDIS_PORT: "6379"
+      CLOUD_LEDGER_REDIS_PASSWORD: ""
+      CLOUD_LEDGER_JWT_SECRET: "${CLOUD_LEDGER_JWT_SECRET:-change-me-to-a-random-secret-key-32-bytes-min!}"   # 占位符：≥32 字节随机密钥
+      CLOUD_LEDGER_DRUID_LOGIN_USERNAME: "${CLOUD_LEDGER_DRUID_LOGIN_USERNAME:-admin}"
+      CLOUD_LEDGER_DRUID_LOGIN_PASSWORD: "${CLOUD_LEDGER_DRUID_LOGIN_PASSWORD:-change_me}"
+      # 生产环境关闭 Druid 监控台
+      SPRING_DATASOURCE_DRUID_STAT_VIEW_SERVLET_ENABLED: "false"
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_COM_CLOUDLEDGER: INFO
+      LOGGING_LEVEL_COM_ALIBABA_DRUID: WARN
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./cloud-ledger-ui
+      dockerfile: Dockerfile
+    container_name: cloud-ledger-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+  redis_data:

@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="CloudLedgerApplication" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.cloudledger.CloudLedgerApplication" />
+    <module name="cloud-ledger" />
+    <!-- 强制 JVM 使用 UTF-8：解决 IDEA 直接运行主类时 file.encoding=GBK
+         与 application.yml 的 logging.charset.console=UTF-8 不匹配导致的控制台中文乱码 -->
+    <option name="VM_PARAMETERS" value="-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8" />
+    <option name="PROGRAM_PARAMETERS" value="" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

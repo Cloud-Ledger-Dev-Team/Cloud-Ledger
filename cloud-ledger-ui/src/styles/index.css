@@ -1,0 +1,57 @@
+:root {
+  --cl-primary: #409eff;
+  --cl-bg: #f5f7fa;
+  --cl-text: #303133;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+  color: var(--cl-text);
+  background: var(--cl-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+.page-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.page-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.text-income {
+  color: #67c23a;
+  font-weight: 600;
+}
+
+.text-expense {
+  color: #f56c6c;
+  font-weight: 600;
+}
+
+/* 响应式：窄屏下卡片内边距收紧 */
+@media (max-width: 768px) {
+  .page-card {
+    padding: 12px;
+  }
+}
